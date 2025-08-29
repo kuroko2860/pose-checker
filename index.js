@@ -1,13 +1,16 @@
 let detector, video, canvas, ctx;
 let referencePose = null;
 const SIMILARITY_THRESHOLD = 85; // %
+let mode = "webcam"; // "webcam" or "image"
 
 async function init() {
   video = document.getElementById("video");
   canvas = document.getElementById("output");
   ctx = canvas.getContext("2d");
 
-  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: true,
+  });
   video.srcObject = stream;
   await new Promise((r) => (video.onloadedmetadata = r));
 
@@ -16,7 +19,10 @@ async function init() {
 
   detector = await poseDetection.createDetector(
     poseDetection.SupportedModels.MoveNet,
-    { modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING }
+    {
+      modelType: poseDetection.movenet.modelType.THUNDER,
+      enableSmoothing: true,
+    }
   );
 
   requestAnimationFrame(runFrame);
@@ -221,6 +227,7 @@ function computeSimilarity(current, reference) {
 }
 
 async function runFrame() {
+  if (mode === "image") return;
   const poses = await detector.estimatePoses(video);
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
@@ -259,6 +266,27 @@ async function runFrame() {
   requestAnimationFrame(runFrame);
 }
 
+document.getElementById("toggleMode").addEventListener("click", () => {
+  if (mode === "webcam") {
+    isRunning = false;
+    video.srcObject.getTracks().forEach((t) => t.stop());
+    video.style.display = "none";
+    mode = "image";
+    document.getElementById("toggleMode").textContent = "Switch to Webcam Mode";
+    document.getElementById("status").textContent =
+      "Upload an image to analyze";
+  } else {
+    init();
+    video.style.display = "none"; // keep hidden since we draw on canvas
+    mode = "webcam";
+    document.getElementById("toggleMode").textContent =
+      "Switch to Image Upload Mode";
+    document.getElementById("status").textContent = "Loading webcam...";
+    isRunning = true;
+    runFrame();
+  }
+});
+
 document.getElementById("setReference").onclick = async () => {
   const poses = await detector.estimatePoses(video);
   if (poses.length > 0) {
@@ -267,5 +295,56 @@ document.getElementById("setReference").onclick = async () => {
       "Reference pose set";
   }
 };
+
+// Handle uploaded image
+document.getElementById("uploadImage").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const img = new Image();
+  img.onload = async () => {
+    // Resize canvas to image
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0, img.width, img.height);
+
+    // Estimate pose on uploaded image
+    const poses = await detector.estimatePoses(img);
+
+    if (poses.length > 0) {
+      const keypoints = poses[0].keypoints;
+      drawKeypoints(keypoints);
+
+      // Rule-based evaluation
+      const { issues, score, total } = checkRules(keypoints);
+      const percent = Math.round((score / total) * 100);
+      const statusEl = document.getElementById("status");
+      const rulesDiv = document.getElementById("rules");
+
+      if (issues.length === 0) {
+        statusEl.textContent = `✅ Stance Acceptable (Rules Score: ${percent}%)`;
+        rulesDiv.textContent = "";
+      } else {
+        statusEl.textContent = `❌ Incorrect Stance (Rules Score: ${percent}%)`;
+        rulesDiv.textContent = "Issues: " + issues.join(", ");
+      }
+
+      // Reference-based evaluation
+      if (referencePose) {
+        const sim = computeSimilarity(keypoints, referencePose);
+        const refStatus =
+          sim >= SIMILARITY_THRESHOLD ? "✅ Acceptable" : "❌ Too different";
+        document.getElementById(
+          "referenceStatus"
+        ).textContent = `Reference similarity: ${sim.toFixed(1)}% ${refStatus}`;
+      }
+    } else {
+      document.getElementById("status").textContent =
+        "No person detected in uploaded image";
+      document.getElementById("rules").textContent = "";
+    }
+  };
+  img.src = URL.createObjectURL(file);
+});
 
 init();
