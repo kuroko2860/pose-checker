@@ -6,6 +6,7 @@ const ControlPanel = ({
   onReferenceImageUpload,
   onCaptureToggle,
   isCapturing,
+  isInCapturedMode,
   fileInputRef,
   referenceFileInputRef,
 }) => {
@@ -33,12 +34,22 @@ const ControlPanel = ({
             className={`px-6 py-3 rounded-xl font-semibold shadow-lg btn-hover-effect ${
               isCapturing
                 ? "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white"
+                : isInCapturedMode
+                ? "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
                 : "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white"
             }`}
           >
             <div className="flex items-center space-x-2">
-              <span className="text-lg">{isCapturing ? "⏹️" : "📸"}</span>
-              <span>{isCapturing ? "Stop Capture" : "Capture Pose"}</span>
+              <span className="text-lg">
+                {isCapturing ? "⏹️" : isInCapturedMode ? "🔄" : "📸"}
+              </span>
+              <span>
+                {isCapturing
+                  ? "Stop Capture"
+                  : isInCapturedMode
+                  ? "Return to Live"
+                  : "Capture Pose"}
+              </span>
             </div>
           </button>
         )}

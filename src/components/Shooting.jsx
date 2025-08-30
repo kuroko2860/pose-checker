@@ -17,6 +17,7 @@ const ShootingStanceChecker = () => {
     mode,
     isRunning,
     isCapturing,
+    isInCapturedMode,
     videoRef,
     canvasRef,
     fileInputRef,
@@ -98,6 +99,15 @@ const ShootingStanceChecker = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Captured Mode Overlay */}
+                {isInCapturedMode && !isCapturing && (
+                  <div className="absolute inset-0 bg-blue-500/20 border-4 border-blue-500 rounded-xl flex items-center justify-center">
+                    {/* <div className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold">
+                      📸 Pose Captured - Analysis Complete
+                    </div> */}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -110,6 +120,7 @@ const ShootingStanceChecker = () => {
               onReferenceImageUpload={handleReferenceImageUpload}
               onCaptureToggle={toggleCapture}
               isCapturing={isCapturing}
+              isInCapturedMode={isInCapturedMode}
               fileInputRef={fileInputRef}
               referenceFileInputRef={referenceFileInputRef}
             />

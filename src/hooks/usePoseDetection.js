@@ -13,6 +13,7 @@ const usePoseDetection = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [capturedPose, setCapturedPose] = useState(null);
+  const [isInCapturedMode, setIsInCapturedMode] = useState(false);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -49,10 +50,11 @@ const usePoseDetection = () => {
         const keypoints = poses[0].keypoints;
         renderPose(canvasRef, videoRef, keypoints);
 
-        // If capturing, store the pose and stop
+        // If capturing, store the pose and stop the animation loop
         if (isCapturing) {
           setCapturedPose(keypoints.map((k) => ({ ...k })));
           setIsCapturing(false);
+          setIsInCapturedMode(true);
           setStatus("Pose captured! Analyzing...");
           
           // Analyze the captured pose
@@ -62,19 +64,25 @@ const usePoseDetection = () => {
           setStatus(newStatus);
           setRules(newRules);
           setReferenceStatus(newRefStatus);
+          
+          // Stop the animation loop when capturing is complete
           return;
         }
 
-        // Normal real-time analysis
-        const { status: newStatus, rules: newRules, referenceStatus: newRefStatus } = 
-          analyzePose(keypoints, referencePose);
-        
-        setStatus(newStatus);
-        setRules(newRules);
-        setReferenceStatus(newRefStatus);
+        // Normal real-time analysis (only if not capturing and not in captured mode)
+        if (!isCapturing && !isInCapturedMode) {
+          const { status: newStatus, rules: newRules, referenceStatus: newRefStatus } = 
+            analyzePose(keypoints, referencePose);
+          
+          setStatus(newStatus);
+          setRules(newRules);
+          setReferenceStatus(newRefStatus);
+        }
       } else {
-        setStatus("No person detected");
-        setRules("");
+        if (!isCapturing && !isInCapturedMode) {
+          setStatus("No person detected");
+          setRules("");
+        }
       }
 
       // Clean up any tensors that might have been created
@@ -86,7 +94,8 @@ const usePoseDetection = () => {
       setStatus("Error in pose detection");
     }
 
-    if (isRunning) {
+    // Continue animation loop only if not capturing and not in captured mode
+    if (isRunning && !isCapturing && !isInCapturedMode) {
       animationFrameRef.current = requestAnimationFrame(runFrame);
     }
   }, [detector, mode, referencePose, isRunning, isCapturing, analyzePose, renderPose]);
@@ -181,6 +190,15 @@ const usePoseDetection = () => {
       // Stop capturing
       setIsCapturing(false);
       setStatus("Capture stopped");
+    } else if (isInCapturedMode) {
+      // Exit captured mode and return to real-time
+      setIsInCapturedMode(false);
+      setCapturedPose(null);
+      setStatus("Returning to real-time mode...");
+      // Restart the animation loop
+      if (isRunning && detector) {
+        runFrame();
+      }
     } else {
       // Start capturing
       setIsCapturing(true);
@@ -231,6 +249,7 @@ const usePoseDetection = () => {
     isRunning,
     isCapturing,
     capturedPose,
+    isInCapturedMode,
     
     // Refs
     videoRef,
