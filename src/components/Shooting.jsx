@@ -18,6 +18,10 @@ const ShootingStanceChecker = () => {
     isRunning,
     isCapturing,
     isInCapturedMode,
+    selectedPoseCategory,
+    detectedPoseCategory,
+    autoCaptureEnabled,
+    capturedImages,
     videoRef,
     canvasRef,
     fileInputRef,
@@ -25,11 +29,14 @@ const ShootingStanceChecker = () => {
     setDetector,
     setStatus,
     setIsRunning,
+    setSelectedPoseCategory,
     setReference,
     handleReferenceImageUpload,
     toggleMode,
     handleImageUpload,
     toggleCapture,
+    toggleAutoCapture,
+    clearCapturedImages,
   } = usePoseDetection();
 
   useEffect(() => {
@@ -121,6 +128,13 @@ const ShootingStanceChecker = () => {
               onCaptureToggle={toggleCapture}
               isCapturing={isCapturing}
               isInCapturedMode={isInCapturedMode}
+              selectedPoseCategory={selectedPoseCategory}
+              detectedPoseCategory={detectedPoseCategory}
+              onPoseCategoryChange={setSelectedPoseCategory}
+              autoCaptureEnabled={autoCaptureEnabled}
+              onToggleAutoCapture={toggleAutoCapture}
+              capturedImages={capturedImages}
+              onClearCapturedImages={clearCapturedImages}
               fileInputRef={fileInputRef}
               referenceFileInputRef={referenceFileInputRef}
             />
@@ -132,6 +146,7 @@ const ShootingStanceChecker = () => {
               status={status}
               rules={rules}
               referenceStatus={referenceStatus}
+              detectedPoseCategory={detectedPoseCategory}
             />
           </div>
         </div>

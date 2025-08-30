@@ -1,3 +1,6 @@
+import PoseSelector from "./PoseSelector";
+import AutoCapturePanel from "./AutoCapturePanel";
+
 const ControlPanel = ({
   mode,
   onToggleMode,
@@ -7,6 +10,13 @@ const ControlPanel = ({
   onCaptureToggle,
   isCapturing,
   isInCapturedMode,
+  selectedPoseCategory,
+  detectedPoseCategory,
+  onPoseCategoryChange,
+  autoCaptureEnabled,
+  onToggleAutoCapture,
+  capturedImages,
+  onClearCapturedImages,
   fileInputRef,
   referenceFileInputRef,
 }) => {
@@ -54,6 +64,23 @@ const ControlPanel = ({
           </button>
         )}
       </div>
+
+      {/* Pose Type Selection */}
+      <PoseSelector
+        selectedPoseCategory={selectedPoseCategory}
+        detectedPoseCategory={detectedPoseCategory}
+        onPoseCategoryChange={onPoseCategoryChange}
+      />
+
+      {/* Auto-Capture Panel */}
+      {mode === "webcam" && (
+        <AutoCapturePanel
+          autoCaptureEnabled={autoCaptureEnabled}
+          onToggleAutoCapture={onToggleAutoCapture}
+          capturedImages={capturedImages}
+          onClearCapturedImages={onClearCapturedImages}
+        />
+      )}
 
       {/* Reference Pose Section */}
       <div className="w-full bg-gray-800 rounded-xl p-6 border border-gray-700">
