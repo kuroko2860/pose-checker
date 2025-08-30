@@ -16,15 +16,19 @@ const ShootingStanceChecker = () => {
     referenceStatus,
     mode,
     isRunning,
+    isCapturing,
     videoRef,
     canvasRef,
     fileInputRef,
+    referenceFileInputRef,
     setDetector,
     setStatus,
     setIsRunning,
     setReference,
+    handleReferenceImageUpload,
     toggleMode,
     handleImageUpload,
+    toggleCapture,
   } = usePoseDetection();
 
   useEffect(() => {
@@ -34,41 +38,91 @@ const ShootingStanceChecker = () => {
   }, [detector, mode, setIsRunning]);
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-gray-900 min-h-screen text-white">
-      <h2 className="text-3xl font-bold text-center mb-6 text-green-400">
-        Shotgun Stance Checker
-      </h2>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      {/* Header */}
+      <div className="bg-black/20 backdrop-blur-sm border-b border-gray-700">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="text-4xl">🎯</div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">
+                  Shotgun Stance Trainer
+                </h1>
+                <p className="text-gray-400 text-sm">
+                  AI-Powered Shooting Form Analysis
+                </p>
+              </div>
+            </div>
 
-      <div className="flex flex-col items-center space-y-4">
-        <video ref={videoRef} autoPlay playsInline className="hidden" />
+            {/* Performance Monitor Toggle */}
+            <button
+              onClick={() => setShowPerformanceMonitor(!showPerformanceMonitor)}
+              className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors duration-200"
+            >
+              {showPerformanceMonitor ? "Hide" : "Show"} Debug
+            </button>
+          </div>
+        </div>
+      </div>
 
-        <canvas
-          ref={canvasRef}
-          className="border-2 border-green-400 rounded-lg max-w-full h-auto"
-        />
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left Column - Camera/Canvas */}
+          <div className="space-y-6">
+            {/* Camera/Canvas Section */}
+            <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-xl">
+              <div className="flex items-center space-x-2 mb-4">
+                <span className="text-2xl">
+                  {mode === "webcam" ? "📹" : "🖼️"}
+                </span>
+                <h2 className="text-xl font-semibold text-white">
+                  {mode === "webcam" ? "Live Camera Feed" : "Image Analysis"}
+                </h2>
+              </div>
 
-        <ControlPanel
-          mode={mode}
-          onToggleMode={toggleMode}
-          onSetReference={setReference}
-          onImageUpload={handleImageUpload}
-          fileInputRef={fileInputRef}
-        />
+              <div className="relative">
+                <video ref={videoRef} autoPlay playsInline className="hidden" />
 
-        <StatusDisplay
-          status={status}
-          rules={rules}
-          referenceStatus={referenceStatus}
-        />
+                <canvas
+                  ref={canvasRef}
+                  className="w-full h-auto rounded-xl border-2 border-gray-600 shadow-lg"
+                />
 
-        {/* Debug controls */}
-        <div className="flex justify-center mt-4">
-          <button
-            onClick={() => setShowPerformanceMonitor(!showPerformanceMonitor)}
-            className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm"
-          >
-            {showPerformanceMonitor ? "Hide" : "Show"} Performance Monitor
-          </button>
+                {/* Capture Overlay */}
+                {isCapturing && (
+                  <div className="capture-overlay">
+                    <div className="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold animate-capture-flash">
+                      📸 Capturing Pose...
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Control Panel */}
+            <ControlPanel
+              mode={mode}
+              onToggleMode={toggleMode}
+              onSetReference={setReference}
+              onImageUpload={handleImageUpload}
+              onReferenceImageUpload={handleReferenceImageUpload}
+              onCaptureToggle={toggleCapture}
+              isCapturing={isCapturing}
+              fileInputRef={fileInputRef}
+              referenceFileInputRef={referenceFileInputRef}
+            />
+          </div>
+
+          {/* Right Column - Status and Analysis */}
+          <div className="space-y-6">
+            <StatusDisplay
+              status={status}
+              rules={rules}
+              referenceStatus={referenceStatus}
+            />
+          </div>
         </div>
       </div>
 
@@ -84,6 +138,16 @@ const ShootingStanceChecker = () => {
       />
 
       <PerformanceMonitor isVisible={showPerformanceMonitor} />
+
+      {/* Footer */}
+      <div className="bg-black/20 backdrop-blur-sm border-t border-gray-700 mt-12">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="text-center text-gray-400 text-sm">
+            <p>🎯 Perfect your shooting stance with AI-powered analysis</p>
+            <p className="mt-1">Built with TensorFlow.js and React</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

@@ -11,10 +11,13 @@ const usePoseDetection = () => {
   const [mode, setMode] = useState("webcam");
   const [referencePose, setReferencePose] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [capturedPose, setCapturedPose] = useState(null);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
+  const referenceFileInputRef = useRef(null);
   const animationFrameRef = useRef(null);
   const lastFrameTimeRef = useRef(0);
   const FRAME_RATE_LIMIT = 30; // Limit to 30 FPS to reduce memory usage
@@ -46,6 +49,23 @@ const usePoseDetection = () => {
         const keypoints = poses[0].keypoints;
         renderPose(canvasRef, videoRef, keypoints);
 
+        // If capturing, store the pose and stop
+        if (isCapturing) {
+          setCapturedPose(keypoints.map((k) => ({ ...k })));
+          setIsCapturing(false);
+          setStatus("Pose captured! Analyzing...");
+          
+          // Analyze the captured pose
+          const { status: newStatus, rules: newRules, referenceStatus: newRefStatus } = 
+            analyzePose(keypoints, referencePose);
+          
+          setStatus(newStatus);
+          setRules(newRules);
+          setReferenceStatus(newRefStatus);
+          return;
+        }
+
+        // Normal real-time analysis
         const { status: newStatus, rules: newRules, referenceStatus: newRefStatus } = 
           analyzePose(keypoints, referencePose);
         
@@ -69,7 +89,7 @@ const usePoseDetection = () => {
     if (isRunning) {
       animationFrameRef.current = requestAnimationFrame(runFrame);
     }
-  }, [detector, mode, referencePose, isRunning, analyzePose, renderPose]);
+  }, [detector, mode, referencePose, isRunning, isCapturing, analyzePose, renderPose]);
 
   const analyzeImage = async (imageElement) => {
     try {
@@ -102,7 +122,7 @@ const usePoseDetection = () => {
       const poses = await detector.estimatePoses(videoRef.current);
       if (poses.length > 0) {
         setReferencePose(poses[0].keypoints.map((k) => ({ ...k })));
-        setReferenceStatus("Reference pose set");
+        setReferenceStatus("Reference pose set from webcam");
       }
     } catch (error) {
       console.error("Error setting reference:", error);
@@ -110,9 +130,32 @@ const usePoseDetection = () => {
     }
   };
 
+  const handleReferenceImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file || !detector) return;
+
+    try {
+      const img = new Image();
+      img.onload = async () => {
+        const poses = await detector.estimatePoses(img);
+        if (poses.length > 0) {
+          setReferencePose(poses[0].keypoints.map((k) => ({ ...k })));
+          setReferenceStatus("Reference pose set from uploaded image");
+        } else {
+          setStatus("No person detected in reference image");
+        }
+      };
+      img.src = URL.createObjectURL(file);
+    } catch (error) {
+      console.error("Error setting reference from image:", error);
+      setStatus("Error setting reference from image");
+    }
+  };
+
   const toggleMode = () => {
     if (mode === "webcam") {
       setIsRunning(false);
+      setIsCapturing(false);
       setMode("image");
       setStatus("Upload an image to analyze");
     } else {
@@ -131,6 +174,18 @@ const usePoseDetection = () => {
     const img = new Image();
     img.onload = () => analyzeImage(img);
     img.src = URL.createObjectURL(file);
+  };
+
+  const toggleCapture = () => {
+    if (isCapturing) {
+      // Stop capturing
+      setIsCapturing(false);
+      setStatus("Capture stopped");
+    } else {
+      // Start capturing
+      setIsCapturing(true);
+      setStatus("Capturing pose...");
+    }
   };
 
   // Cleanup function to stop animation frame
@@ -174,11 +229,14 @@ const usePoseDetection = () => {
     mode,
     referencePose,
     isRunning,
+    isCapturing,
+    capturedPose,
     
     // Refs
     videoRef,
     canvasRef,
     fileInputRef,
+    referenceFileInputRef,
     
     // Setters
     setDetector,
@@ -188,8 +246,10 @@ const usePoseDetection = () => {
     // Actions
     analyzeImage,
     setReference,
+    handleReferenceImageUpload,
     toggleMode,
     handleImageUpload,
+    toggleCapture,
     runFrame,
     stopAnimation
   };
