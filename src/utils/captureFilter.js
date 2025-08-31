@@ -1,8 +1,10 @@
 import { classifyPose } from "./poseCategories";
+import { POSE_CONFIG } from "../utils/const";
+
 
 // Capture filter configuration
 export const CAPTURE_CONFIG = {
-  CONFIDENCE_THRESHOLD: 10, // Minimum keypoints with score > 0.4
+  CONFIDENCE_THRESHOLD: 10, // Minimum keypoints with score > POSE_CONFIG.CONFIDENT_SCORE
   STABILITY_FRAMES: 10, // Consecutive frames with same classification
   ERROR_THRESHOLD: 70, // Rule score threshold (below this = bad pose)
   CAPTURE_COOLDOWN: 30, // Frames to wait before capturing another bad pose
@@ -51,7 +53,7 @@ export class CaptureFilter {
 
   // Confidence filter: only accept frames with enough keypoints
   passesConfidenceFilter(keypoints) {
-    const visibleKeypoints = keypoints.filter(k => k.score > 0.4).length;
+    const visibleKeypoints = keypoints.filter(k => k.score > POSE_CONFIG.CONFIDENT_SCORE).length;
     return visibleKeypoints >= CAPTURE_CONFIG.CONFIDENCE_THRESHOLD;
   }
 

@@ -1,4 +1,5 @@
 import { angleAt, dist } from "./compute";
+import { POSE_CONFIG } from "../utils/const";
 
 // Pose classification categories
 export const POSE_CATEGORIES = {
@@ -11,7 +12,7 @@ export const POSE_CATEGORIES = {
 
 // Helper function to get keypoint by name
 const byName = (kps, name) =>
-  kps.find((k) => k.name === name && k.score > 0.4) || null;
+  kps.find((k) => k.name === name && k.score > POSE_CONFIG.CONFIDENT_SCORE) || null;
 
 // Pose classification logic
 export const classifyPose = (keypoints) => {
@@ -31,7 +32,7 @@ export const classifyPose = (keypoints) => {
   const REar = byName(keypoints, "right_ear");
 
   // Check if we have enough keypoints
-  const visibleKeypoints = keypoints.filter(k => k.score > 0.4).length;
+  const visibleKeypoints = keypoints.filter(k => k.score > POSE_CONFIG.CONFIDENT_SCORE).length;
   if (visibleKeypoints < 10) return POSE_CATEGORIES.UNKNOWN;
 
   // Check for kneeling pose
@@ -61,9 +62,9 @@ export const classifyPose = (keypoints) => {
     const leftArmAngle = angleAt(LE, LS, LW);
     const rightArmAngle = angleAt(RE, RS, RW);
     
-    // One arm extended (>150°), other arm bent (<90°)
-    if ((leftArmAngle > 150 && rightArmAngle < 90) || 
-        (rightArmAngle > 150 && leftArmAngle < 90)) {
+    // One arm extended (>150°), other arm bent (<110°)
+    if ((leftArmAngle > 150 && rightArmAngle < 110) || 
+        (rightArmAngle > 150 && leftArmAngle < 110)) {
       return POSE_CATEGORIES.ONE_HAND_STANDING;
     }
   }

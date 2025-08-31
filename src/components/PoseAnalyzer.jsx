@@ -1,5 +1,7 @@
 import { angleAt, dist } from "../utils/compute";
 import { names } from "../utils/const";
+import { POSE_CONFIG } from "../utils/const";
+
 import {
   classifyPose,
   getPoseCategoryInfo,
@@ -11,16 +13,21 @@ const PoseAnalyzer = () => {
 
   // Helper functions
   const byName = (kps, name) =>
-    kps.find((k) => k.name === name && k.score > 0.4) || null;
+    kps.find((k) => k.name === name && k.score > POSE_CONFIG.CONFIDENT_SCORE) ||
+    null;
 
   const computeSimilarity = (current, reference) => {
     if (!current || !reference) return 0;
 
     const cur = Object.fromEntries(
-      current.filter((k) => k.score > 0.4).map((k) => [k.name, k])
+      current
+        .filter((k) => k.score > POSE_CONFIG.CONFIDENT_SCORE)
+        .map((k) => [k.name, k])
     );
     const ref = Object.fromEntries(
-      reference.filter((k) => k.score > 0.4).map((k) => [k.name, k])
+      reference
+        .filter((k) => k.score > POSE_CONFIG.CONFIDENT_SCORE)
+        .map((k) => [k.name, k])
     );
 
     const ls = cur["left_shoulder"];

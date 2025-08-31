@@ -67,7 +67,7 @@ const StatusDisplay = ({
               Improvement Areas
             </h4>
           </div>
-          <div className="text-red-300 text-sm leading-relaxed">
+          <div className="text-red-300 text-sm leading-relaxed h-44 overflow-y-auto pr-2">
             {rules
               .replace("Issues: ", "")
               .split(", ")

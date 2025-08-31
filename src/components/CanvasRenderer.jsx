@@ -1,9 +1,10 @@
 import { edges } from "../utils/const";
+import { POSE_CONFIG } from "../utils/const";
 
 const CanvasRenderer = () => {
   const drawKeypoints = (ctx, keypoints) => {
     keypoints.forEach((kp) => {
-      if (kp.score > 0.4) {
+      if (kp.score > POSE_CONFIG.CONFIDENT_SCORE) {
         ctx.beginPath();
         ctx.arc(kp.x, kp.y, 4, 0, 2 * Math.PI);
         ctx.fillStyle = "lime";
@@ -13,7 +14,9 @@ const CanvasRenderer = () => {
 
     // Draw skeleton lines
     const getByName = (n) =>
-      keypoints.find((k) => k.name === n && k.score > 0.4);
+      keypoints.find(
+        (k) => k.name === n && k.score > POSE_CONFIG.CONFIDENT_SCORE
+      );
     ctx.strokeStyle = "#00e676";
     ctx.lineWidth = 2;
 

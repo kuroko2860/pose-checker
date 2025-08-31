@@ -30,3 +30,8 @@ export const edges = [
   ["right_hip", "right_knee"],
   ["right_knee", "right_ankle"],
 ];
+
+export const POSE_CONFIG = {
+  CONFIDENT_SCORE: 0.5,
+  CONFIDENT_TRACKING_SCORE: 0.4
+}
