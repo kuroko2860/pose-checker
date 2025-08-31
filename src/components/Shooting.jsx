@@ -5,6 +5,7 @@ import StatusDisplay from "./StatusDisplay";
 import ControlPanel from "./ControlPanel";
 import PerformanceMonitor from "./PerformanceMonitor";
 import usePoseDetection from "../hooks/usePoseDetection";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 const ShootingStanceChecker = () => {
   const [showPerformanceMonitor, setShowPerformanceMonitor] = useState(false);
@@ -173,6 +174,7 @@ const ShootingStanceChecker = () => {
             <p className="mt-1">Built with TensorFlow.js and React</p>
           </div>
         </div>
+        <LanguageSwitcher />
       </div>
     </div>
   );

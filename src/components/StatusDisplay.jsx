@@ -1,4 +1,5 @@
 import { getPoseCategoryInfo } from "../utils/poseCategories";
+import { t } from "../utils/translations";
 
 const StatusDisplay = ({
   status,
@@ -29,7 +30,9 @@ const StatusDisplay = ({
       {/* Main Status Card */}
       <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-xl">
         <div className="text-center mb-4">
-          <h3 className="text-xl font-bold text-center">Stance Analysis</h3>
+          <h3 className="text-xl font-bold text-center">
+            {t("stanceAnalysis")}
+          </h3>
         </div>
 
         <div
@@ -46,7 +49,7 @@ const StatusDisplay = ({
             <div className="flex items-center justify-center space-x-2 mb-2">
               <span className="text-blue-400">🎯</span>
               <span className="text-blue-300 font-medium">
-                Detected: {detectedPoseInfo.name}
+                {t("detected")} {detectedPoseInfo.name}
               </span>
             </div>
             {detectedPoseInfo.description && (
@@ -64,7 +67,7 @@ const StatusDisplay = ({
           <div className="flex items-center space-x-2 mb-3">
             <span className="text-xl">🎯</span>
             <h4 className="text-lg font-semibold text-red-400">
-              Improvement Areas
+              {t("improvementAreas")}
             </h4>
           </div>
           <div className="text-red-300 text-sm leading-relaxed h-44 overflow-y-auto pr-2">
@@ -86,7 +89,7 @@ const StatusDisplay = ({
         <div className="flex items-center space-x-2 mb-3">
           <span className="text-xl">📊</span>
           <h4 className="text-lg font-semibold text-gray-300">
-            Reference Comparison
+            {t("referenceComparison")}
           </h4>
         </div>
         <div
@@ -103,29 +106,29 @@ const StatusDisplay = ({
         <div className="flex items-center space-x-2 mb-3">
           <span className="text-xl">💡</span>
           <h4 className="text-lg font-semibold text-yellow-400">
-            Shooting Tips
+            {t("shootingTips")}
           </h4>
         </div>
         <div className="text-gray-300 text-sm space-y-2">
           <div className="flex items-start space-x-2">
             <span className="text-yellow-400 mt-1">•</span>
-            <span>Keep your feet shoulder-width apart for stability</span>
+            <span>{t("feetShoulderWidth")}</span>
           </div>
           <div className="flex items-start space-x-2">
             <span className="text-yellow-400 mt-1">•</span>
-            <span>Bend your knees slightly to absorb recoil</span>
+            <span>{t("bendKnees")}</span>
           </div>
           <div className="flex items-start space-x-2">
             <span className="text-yellow-400 mt-1">•</span>
-            <span>Lean forward slightly from the waist</span>
+            <span>{t("leanForward")}</span>
           </div>
           <div className="flex items-start space-x-2">
             <span className="text-yellow-400 mt-1">•</span>
-            <span>Keep your head level and eyes on target</span>
+            <span>{t("keepHeadLevel")}</span>
           </div>
           <div className="flex items-start space-x-2">
             <span className="text-yellow-400 mt-1">•</span>
-            <span>Practice regularly to build muscle memory</span>
+            <span>{t("practiceRegularly")}</span>
           </div>
         </div>
       </div>
