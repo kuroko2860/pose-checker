@@ -1,6 +1,7 @@
 import { angleAt, dist } from "../utils/compute";
 import { names } from "../utils/const";
 import { POSE_CONFIG } from "../utils/const";
+import { getLanguage, t } from "../utils/translations";
 
 import {
   classifyPose,
@@ -70,19 +71,19 @@ const PoseAnalyzer = () => {
 
     let status, rules;
     if (issues.length === 0) {
-      status = `✅ ${poseInfo.name} - Acceptable (Score: ${percent}%)`;
+      status = t("stanceAcceptable", { percent });
       rules = "";
     } else {
-      status = `❌ ${poseInfo.name} - Needs Improvement (Score: ${percent}%)`;
-      rules = "Issues: " + issues.join(", ");
+      status = t("stanceIncorrect", { percent });
+      rules = t("issues", { issues: issues.join(", ") });
     }
 
-    let referenceStatus = "No reference pose set";
+    let referenceStatus = t("noReferenceSet");
     if (referencePose) {
       const sim = computeSimilarity(keypoints, referencePose);
       const refStatus =
-        sim >= SIMILARITY_THRESHOLD ? "✅ Acceptable" : "❌ Too different";
-      referenceStatus = `Reference similarity: ${sim.toFixed(1)}% ${refStatus}`;
+        sim >= SIMILARITY_THRESHOLD ? t("refAcceptable") : t("refDifferent");
+      referenceStatus = t("referenceSimilarity", { sim: sim.toFixed(1), status: refStatus });
     }
 
     return {

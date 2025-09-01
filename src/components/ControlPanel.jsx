@@ -1,5 +1,6 @@
 import PoseSelector from "./PoseSelector";
 import AutoCapturePanel from "./AutoCapturePanel";
+import { t } from "../utils/translations";
 
 const ControlPanel = ({
   mode,
@@ -32,8 +33,8 @@ const ControlPanel = ({
             <span className="text-lg">{mode === "webcam" ? "📷" : "🖼️"}</span>
             <span>
               {mode === "webcam"
-                ? "Switch to Image Mode"
-                : "Switch to Webcam Mode"}
+                ? t("switchToImageMode")
+                : t("switchToWebcamMode")}
             </span>
           </div>
         </button>
@@ -55,10 +56,10 @@ const ControlPanel = ({
               </span>
               <span>
                 {isCapturing
-                  ? "Stop Capture"
+                  ? t("stopCapture")
                   : isInCapturedMode
-                  ? "Return to Live"
-                  : "Capture Pose"}
+                  ? t("returnToLive")
+                  : t("capturePose")}
               </span>
             </div>
           </button>
@@ -85,7 +86,7 @@ const ControlPanel = ({
       {/* Reference Pose Section */}
       <div className="w-full bg-gray-800 rounded-xl p-6 border border-gray-700">
         <h3 className="text-lg font-semibold text-center mb-4 text-green-400">
-          🎯 Reference Pose Setup
+          {t("referencePoseSetup")}
         </h3>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -101,7 +102,7 @@ const ControlPanel = ({
           >
             <div className="flex items-center space-x-2">
               <span>📹</span>
-              <span>Set from Webcam</span>
+              <span>{t("setReferenceFromWebcam")}</span>
             </div>
           </button>
 
@@ -120,7 +121,7 @@ const ControlPanel = ({
             >
               <div className="flex items-center space-x-2">
                 <span>🖼️</span>
-                <span>Upload Reference</span>
+                <span>{t("uploadReferenceImage")}</span>
               </div>
             </button>
           </div>
@@ -131,7 +132,7 @@ const ControlPanel = ({
       {mode === "image" && (
         <div className="w-full bg-gray-800 rounded-xl p-6 border border-gray-700">
           <h3 className="text-lg font-semibold text-center mb-4 text-blue-400">
-            📸 Analyze Image
+            📸 {t("uploadImageToAnalyze")}
           </h3>
           <input
             ref={fileInputRef}

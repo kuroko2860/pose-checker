@@ -1,4 +1,5 @@
 import { POSE_CATEGORIES, getPoseCategoryInfo } from "../utils/poseCategories";
+import { t } from "../utils/translations";
 
 const PoseSelector = ({
   selectedPoseCategory,
@@ -8,32 +9,32 @@ const PoseSelector = ({
   const poseCategories = [
     {
       key: null,
-      name: "Auto-Detect",
-      description: "Automatically detect pose type",
+      name: t("autoDetect"),
+      description: t("autoDetectDesc"),
       icon: "🤖",
     },
     {
       key: POSE_CATEGORIES.TWO_HAND_STANDING,
-      name: "Two-Hand Standing",
-      description: "Traditional shotgun stance",
+      name: t("twoHandStanding"),
+      description: t("twoHandStandingDesc"),
       icon: "🎯",
     },
     {
       key: POSE_CATEGORIES.ONE_HAND_STANDING,
-      name: "One-Hand Standing",
-      description: "Single-handed stance",
+      name: t("oneHandStanding"),
+      description: t("oneHandStandingDesc"),
       icon: "👆",
     },
     {
       key: POSE_CATEGORIES.KNEELING,
-      name: "Kneeling",
-      description: "Low-profile kneeling position",
+      name: t("kneeling"),
+      description: t("kneelingDesc"),
       icon: "🦵",
     },
     {
       key: POSE_CATEGORIES.CHECKING_GUN,
-      name: "Checking Gun",
-      description: "Safety check position",
+      name: t("checkingGun"),
+      description: t("checkingGunDesc"),
       icon: "🔍",
     },
   ];
@@ -48,7 +49,7 @@ const PoseSelector = ({
   return (
     <div className="w-full bg-gray-800 rounded-xl p-6 border border-gray-700">
       <h3 className="text-lg font-semibold text-center mb-4 text-purple-400">
-        🎯 Pose Type Selection
+        {t("poseTypeSelection")}
       </h3>
 
       {/* Auto-detection status */}
@@ -57,7 +58,7 @@ const PoseSelector = ({
           <div className="flex items-center space-x-2">
             <span className="text-blue-400">🔍</span>
             <span className="text-blue-300 text-sm font-medium">
-              Auto-detected: {detectedPoseInfo?.name || "Unknown"}
+              {t("autoDetected")} {detectedPoseInfo?.name || t("unknown")}
             </span>
           </div>
           {detectedPoseInfo?.description && (
@@ -98,8 +99,8 @@ const PoseSelector = ({
       <div className="mt-4 text-center text-gray-400 text-xs">
         <p>
           {selectedPoseCategory
-            ? "Using specific pose rules for better accuracy"
-            : "Auto-detection will choose the best pose type based on your stance"}
+            ? t("selectPoseToAnalyze")
+            : t("selectPoseToAnalyze")}
         </p>
       </div>
     </div>

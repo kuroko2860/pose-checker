@@ -4,12 +4,13 @@ import CanvasRenderer from "../components/CanvasRenderer";
 import { memoryManager } from "../utils/memoryManager";
 import { createCaptureFilter } from "../utils/captureFilter";
 import { POSE_CATEGORIES } from "../utils/poseCategories";
+import { getLanguage, t } from "../utils/translations";
 
 const usePoseDetection = () => {
   const [detector, setDetector] = useState(null);
-  const [status, setStatus] = useState("Loading...");
+  const [status, setStatus] = useState(t("loading"));
   const [rules, setRules] = useState("");
-  const [referenceStatus, setReferenceStatus] = useState("No reference pose set");
+  const [referenceStatus, setReferenceStatus] = useState(t("noReferenceSet"));
   const [mode, setMode] = useState("webcam");
   const [referencePose, setReferencePose] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -62,7 +63,7 @@ const usePoseDetection = () => {
           setCapturedPose(keypoints.map((k) => ({ ...k })));
           setIsCapturing(false);
           setIsInCapturedMode(true);
-          setStatus("Pose captured! Analyzing...");
+          setStatus(t("poseCapturingAnalyzing"));
           
           // Analyze the captured pose
           const analysis = analyzePose(keypoints, referencePose, selectedPoseCategory);
@@ -101,13 +102,13 @@ const usePoseDetection = () => {
                 issues: analysis.rules
               }]);
               
-              setStatus(`📸 Auto-captured: ${analysis.poseInfo.name} (Score: ${analysis.score}%)`);
+              setStatus(t("autoCaptured", { name: analysis.poseInfo.name, score: analysis.score }));
             }
           }
         }
       } else {
         if (!isCapturing && !isInCapturedMode) {
-          setStatus("No person detected");
+          setStatus(t("noPoseDetected"));
           setRules("");
         }
       }
@@ -118,7 +119,7 @@ const usePoseDetection = () => {
       }
     } catch (error) {
       console.error("Error in pose detection:", error);
-      setStatus("Error in pose detection");
+      setStatus(t("poseDetectionError"));
     }
 
     // Continue animation loop only if not capturing and not in captured mode
@@ -142,12 +143,12 @@ const usePoseDetection = () => {
         setReferenceStatus(analysis.referenceStatus);
         setDetectedPoseCategory(analysis.detectedCategory);
       } else {
-        setStatus("No person detected in uploaded image");
+        setStatus(t("noPerson"));
         setRules("");
       }
     } catch (error) {
       console.error("Error analyzing image:", error);
-      setStatus("Error analyzing image");
+      setStatus(t("analysisError"));
     }
   };
 
@@ -158,11 +159,11 @@ const usePoseDetection = () => {
       const poses = await detector.estimatePoses(videoRef.current);
       if (poses.length > 0) {
         setReferencePose(poses[0].keypoints.map((k) => ({ ...k })));
-        setReferenceStatus("Reference pose set from webcam");
+        setReferenceStatus(t("referenceSetFromWebcam"));
       }
     } catch (error) {
       console.error("Error setting reference:", error);
-      setStatus("Error setting reference pose");
+      setStatus(t("errorSettingReference"));
     }
   };
 
@@ -176,15 +177,15 @@ const usePoseDetection = () => {
         const poses = await detector.estimatePoses(img);
         if (poses.length > 0) {
           setReferencePose(poses[0].keypoints.map((k) => ({ ...k })));
-          setReferenceStatus("Reference pose set from uploaded image");
+          setReferenceStatus(t("referenceSetFromImage"));
         } else {
-          setStatus("No person detected in reference image");
+          setStatus(t("noPersonInReference"));
         }
       };
       img.src = URL.createObjectURL(file);
     } catch (error) {
       console.error("Error setting reference from image:", error);
-      setStatus("Error setting reference from image");
+      setStatus(t("errorSettingReferenceFromImage"));
     }
   };
 
@@ -193,11 +194,11 @@ const usePoseDetection = () => {
       setIsRunning(false);
       setIsCapturing(false);
       setMode("image");
-      setStatus("Upload an image to analyze");
+      setStatus(t("uploadImagePrompt"));
       captureFilterRef.current.reset();
     } else {
       setMode("webcam");
-      setStatus("Loading webcam...");
+      setStatus(t("cameraInitializing"));
       if (detector) {
         setIsRunning(true);
       }
@@ -217,12 +218,12 @@ const usePoseDetection = () => {
     if (isCapturing) {
       // Stop capturing
       setIsCapturing(false);
-      setStatus("Capture stopped");
+      setStatus(t("captureStopped"));
     } else if (isInCapturedMode) {
       // Exit captured mode and return to real-time
       setIsInCapturedMode(false);
       setCapturedPose(null);
-      setStatus("Returning to real-time mode...");
+      setStatus(t("returningToRealTime"));
       // Restart the animation loop
       if (isRunning && detector) {
         runFrame();
@@ -230,16 +231,16 @@ const usePoseDetection = () => {
     } else {
       // Start capturing
       setIsCapturing(true);
-      setStatus("Capturing pose...");
+      setStatus(t("capturingPose"));
     }
   };
 
   const toggleAutoCapture = () => {
     setAutoCaptureEnabled(!autoCaptureEnabled);
     if (!autoCaptureEnabled) {
-      setStatus("Auto-capture enabled - will capture bad poses automatically");
+      setStatus(t("autoCaptureEnabled"));
     } else {
-      setStatus("Auto-capture disabled");
+      setStatus(t("autoCaptureDisabled"));
     }
   };
 
