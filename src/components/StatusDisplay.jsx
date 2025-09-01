@@ -1,5 +1,5 @@
 import { getPoseCategoryInfo } from "../utils/poseCategories";
-import { t } from "../utils/translations";
+import { getLanguage, t } from "../utils/translations";
 
 const StatusDisplay = ({
   status,
@@ -30,7 +30,7 @@ const StatusDisplay = ({
       {/* Main Status Card */}
       <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-xl">
         <div className="text-center mb-4">
-          <h3 className="text-xl font-bold text-center">
+          <h3 className="text-xl font-bold text-center text-white">
             {t("stanceAnalysis")}
           </h3>
         </div>
@@ -62,27 +62,28 @@ const StatusDisplay = ({
       </div>
 
       {/* Improvement Areas */}
-      {rules && rules.includes("Issues:") && (
-        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-xl">
-          <div className="flex items-center space-x-2 mb-3">
-            <span className="text-xl">🎯</span>
-            <h4 className="text-lg font-semibold text-red-400">
-              {t("improvementAreas")}
-            </h4>
+      {rules &&
+        rules.includes(getLanguage() === "en" ? "Issues: " : "Lỗi: ") && (
+          <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-xl">
+            <div className="flex items-center space-x-2 mb-3">
+              <span className="text-xl">🎯</span>
+              <h4 className="text-lg font-semibold text-red-400">
+                {t("improvementAreas")}
+              </h4>
+            </div>
+            <div className="text-red-300 text-sm leading-relaxed h-44 overflow-y-auto pr-2">
+              {rules
+                .replace(getLanguage() === "en" ? "Issues: " : "Lỗi: ", "")
+                .split(", ")
+                .map((issue, index) => (
+                  <div key={index} className="flex items-start space-x-2 mb-2">
+                    <span className="text-red-400 mt-1">•</span>
+                    <span>{issue}</span>
+                  </div>
+                ))}
+            </div>
           </div>
-          <div className="text-red-300 text-sm leading-relaxed h-44 overflow-y-auto pr-2">
-            {rules
-              .replace("Issues: ", "")
-              .split(", ")
-              .map((issue, index) => (
-                <div key={index} className="flex items-start space-x-2 mb-2">
-                  <span className="text-red-400 mt-1">•</span>
-                  <span>{issue}</span>
-                </div>
-              ))}
-          </div>
-        </div>
-      )}
+        )}
 
       {/* Reference Comparison */}
       <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-xl">

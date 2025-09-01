@@ -4,6 +4,7 @@ import LanguageSwitcher from "./components/LanguageSwitcher";
 function App() {
   return (
     <>
+      <LanguageSwitcher />
       <ShootingStanceChecker />
     </>
   );
