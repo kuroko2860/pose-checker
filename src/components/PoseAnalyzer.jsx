@@ -1,22 +1,13 @@
-import { angleAt, dist } from "../utils/compute";
-import { names } from "../utils/const";
-import { POSE_CONFIG } from "../utils/const";
-import { getLanguage, t } from "../utils/translations";
+import { dist } from "../utils/compute";
+import { names, POSE_CONFIG } from "../utils/const";
+import { t } from "../utils/translations";
 
-import {
-  classifyPose,
-  getPoseCategoryInfo,
-  POSE_CATEGORIES,
-} from "../utils/poseCategories";
+import { classifyPose, getPoseCategoryInfo } from "../utils/poseCategories";
 
 const PoseAnalyzer = () => {
   const SIMILARITY_THRESHOLD = 85;
 
   // Helper functions
-  const byName = (kps, name) =>
-    kps.find((k) => k.name === name && k.score > POSE_CONFIG.CONFIDENT_SCORE) ||
-    null;
-
   const computeSimilarity = (current, reference) => {
     if (!current || !reference) return 0;
 
@@ -83,7 +74,10 @@ const PoseAnalyzer = () => {
       const sim = computeSimilarity(keypoints, referencePose);
       const refStatus =
         sim >= SIMILARITY_THRESHOLD ? t("refAcceptable") : t("refDifferent");
-      referenceStatus = t("referenceSimilarity", { sim: sim.toFixed(1), status: refStatus });
+      referenceStatus = t("referenceSimilarity", {
+        sim: sim.toFixed(1),
+        status: refStatus,
+      });
     }
 
     return {

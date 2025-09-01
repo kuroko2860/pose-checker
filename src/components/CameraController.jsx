@@ -29,8 +29,16 @@ const CameraController = ({
       const video = videoRef.current;
       video.srcObject = stream;
 
-      await new Promise((resolve) => {
-        video.onloadedmetadata = resolve;
+      await new Promise((resolve, reject) => {
+        video.onloadedmetadata = () => {
+          video
+            .play()
+            .then(() => resolve(video))
+            .catch((err) => {
+              reject(err);
+              console.log(err);
+            });
+        };
       });
 
       const canvas = canvasRef.current;

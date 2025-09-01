@@ -115,10 +115,6 @@ const i18n = {
     poor: "Poor",
     captureStopped: "Capture stopped",
     returningToRealTime: "Returning to real-time mode...",
-    capturingPose: "Capturing pose...",
-    autoCaptureEnabled:
-      "Auto-capture enabled - will capture bad poses automatically",
-    autoCaptureDisabled: "Auto-capture disabled",
 
     // Performance Monitor
     performanceMonitor: "Performance Monitor",
@@ -292,11 +288,6 @@ const i18n = {
     poor: "Kém",
     captureStopped: "Đã dừng chụp",
     returningToRealTime: "Đang trở lại chế độ thời gian thực...",
-    capturingPose: "Đang chụp tư thế...",
-    cameraInitializing: "Đang tải webcam...",
-    autoCaptureEnabled:
-      "Đã bật tự động chụp - sẽ tự động chụp các tư thế không đúng",
-    autoCaptureDisabled: "Đã tắt tự động chụp",
 
     // Performance Monitor
     performanceMonitor: "Màn hình Hiệu suất",

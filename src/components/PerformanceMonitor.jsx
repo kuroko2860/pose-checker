@@ -5,7 +5,7 @@ const PerformanceMonitor = ({ isVisible = false }) => {
   const [memoryInfo, setMemoryInfo] = useState(null);
   const [fps, setFps] = useState(0);
   const [frameCount, setFrameCount] = useState(0);
-  const [lastTime, setLastTime] = useState(0);
+  const [_, setLastTime] = useState(0);
 
   useEffect(() => {
     if (!isVisible) return;

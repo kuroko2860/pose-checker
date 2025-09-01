@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { t } from "../utils/translations";
 
 const ImageDetailPopup = ({ image, isOpen, onClose }) => {
