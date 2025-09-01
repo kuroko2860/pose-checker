@@ -2,13 +2,6 @@ import { angleAt, dist } from "./compute";
 import { POSE_CONFIG } from "../utils/const";
 import { t } from "./translations";
 
-// Translation function
-// const t = (key) => {
-//   const translations = getTranslations();
-//   const lang = getLanguage();
-//   return translations[lang][key] || translations.en[key] || key;
-// };
-
 // Pose classification categories
 export const POSE_CATEGORIES = {
   TWO_HAND_STANDING: "two_hand_standing",
