@@ -183,7 +183,7 @@ const i18n = {
   },
   vi: {
     // App
-    shotgunStanceTrainer: "Huấn Luyện Tư Thế Bắn Súng",
+    shotgunStanceTrainer: "Phân tích động tác bắn súng ngắn bằng AI",
     aiPoweredAnalysis: "Phân Tích Tư Thế Bắn Bằng AI",
     liveCameraFeed: "Nguồn Camera Trực Tiếp",
     imageAnalysis: "Phân Tích Hình Ảnh",
@@ -236,13 +236,13 @@ const i18n = {
     // Pose Categories
     autoDetect: "Tự động Phát hiện",
     autoDetectDesc: "Tự động phát hiện loại tư thế",
-    twoHandStanding: "Đứng Hai tay",
+    twoHandStanding: "Động tác bắn hai tay",
     twoHandStandingDesc: "Tư thế bắn súng truyền thống",
-    oneHandStanding: "Đứng Một tay",
+    oneHandStanding: "Động tác bắn một tay",
     oneHandStandingDesc: "Tư thế một tay",
-    kneeling: "Quỳ",
+    kneeling: "Động tác quỳ",
     kneelingDesc: "Tư thế quỳ thấp",
-    checkingGun: "Kiểm tra Súng",
+    checkingGun: "Động tác khám súng",
     checkingGunDesc: "Tư thế kiểm tra an toàn",
 
     // Pose Selector
