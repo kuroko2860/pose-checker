@@ -5,7 +5,6 @@ import StatusDisplay from "./StatusDisplay";
 import ControlPanel from "./ControlPanel";
 import PerformanceMonitor from "./PerformanceMonitor";
 import usePoseDetection from "../hooks/usePoseDetection";
-import LanguageSwitcher from "./LanguageSwitcher";
 import { t } from "../utils/translations";
 
 const ShootingStanceChecker = () => {
@@ -93,7 +92,15 @@ const ShootingStanceChecker = () => {
               </div>
 
               <div className="relative">
-                <video ref={videoRef} autoPlay playsInline className="hidden" />
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  width="640"
+                  height="480"
+                  className="hidden"
+                />
 
                 <canvas
                   ref={canvasRef}

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { t, setLanguage, getLanguage } from "../utils/translations";
+import { useState, useEffect, useRef } from "react";
+import { setLanguage, getLanguage } from "../utils/translations";
 
 const LanguageSwitcher = () => {
   const currentLang = getLanguage();

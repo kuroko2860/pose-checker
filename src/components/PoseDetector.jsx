@@ -1,18 +1,23 @@
 import { useState, useEffect } from "react";
 import * as poseDetection from "@tensorflow-models/pose-detection";
 import * as tf from "@tensorflow/tfjs";
+import "@tensorflow/tfjs-backend-webgl";
 
 const PoseDetector = ({ onDetectorReady, onStatusChange }) => {
-  const [detector, setDetector] = useState(null);
+  const [_, setDetector] = useState(null);
 
   const initPoseDetector = async () => {
     try {
+      await tf.setBackend("webgl");
       await tf.ready();
       const det = await poseDetection.createDetector(
-        poseDetection.SupportedModels.MoveNet,
+        poseDetection.SupportedModels.BlazePose,
         {
-          modelType: poseDetection.movenet.modelType.THUNDER,
+          runtime: "tfjs",
+          modelType: "full", // options: "lite" | "full" | "heavy"
           enableSmoothing: true,
+          // enableTracking: true,
+          // modelType: poseDetection.movenet.modelType.THUNDER,
         }
       );
       setDetector(det);

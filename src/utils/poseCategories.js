@@ -1,4 +1,4 @@
-import { angleAt, dist } from "./compute";
+import { angle3D, distance3D } from "./compute";
 import { POSE_CONFIG } from "../utils/const";
 import { t } from "./translations";
 
@@ -37,12 +37,12 @@ export const classifyPose = (keypoints) => {
   const visibleKeypoints = keypoints.filter(
     (k) => k.score > POSE_CONFIG.CONFIDENT_SCORE
   ).length;
-  if (visibleKeypoints < 10) return POSE_CATEGORIES.UNKNOWN;
+  if (visibleKeypoints < 15) return POSE_CATEGORIES.UNKNOWN;
 
   // Check for kneeling pose
   if (LK && RK && LA && RA) {
-    const leftKneeAngle = angleAt(LK, LH, LA);
-    const rightKneeAngle = angleAt(RK, RH, RA);
+    const leftKneeAngle = angle3D(LH, LK, LA);
+    const rightKneeAngle = angle3D(RH, RK, RA);
 
     if (
       leftKneeAngle &&
@@ -55,32 +55,43 @@ export const classifyPose = (keypoints) => {
   }
 
   // Check for checking gun pose (arms close together, looking down)
-  if (LS && RS && LE && RE && LW && RW) {
-    const shoulderDist = dist(LS, RS);
-    const wristDist = dist(LW, RW);
-    const elbowDist = dist(LE, RE);
+  if (RH && RS && RE && RW) {
+    const a1 = angle3D(RH, RS, RE);
+    const a2 = angle3D(RS, RE, RW);
 
-    if (wristDist < shoulderDist * 0.3 && elbowDist < shoulderDist * 0.5) {
+    if (0 < a1 && a1 < 20 && 30 < a2 && a2 < 50) {
       return POSE_CATEGORIES.CHECKING_GUN;
     }
   }
 
   // Check for one-handed stance (one arm extended, other close to body)
   if (LS && RS && LE && RE && LW && RW) {
-    const leftArmAngle = angleAt(LE, LS, LW);
-    const rightArmAngle = angleAt(RE, RS, RW);
+    const leftArmAngle = angle3D(LS, LE, LW);
+    const rightArmAngle = angle3D(RS, RE, RW);
 
-    // One arm extended (>150°), other arm bent (<110°)
+    // One arm extended, other arm bent
     if (
-      (leftArmAngle > 150 && rightArmAngle < 110) ||
-      (rightArmAngle > 150 && leftArmAngle < 110)
+      (leftArmAngle >= 150 && 60 <= rightArmAngle && rightArmAngle <= 135) ||
+      (rightArmAngle >= 150 && 60 <= leftArmAngle && leftArmAngle <= 135)
     ) {
       return POSE_CATEGORIES.ONE_HAND_STANDING;
     }
   }
 
+  // Check for two-handed stance (arms extended, body straight)
+  if (LS && RS && LE && RE && LW && RW) {
+    const leftArmAngle = angle3D(LS, LE, LW);
+    const rightArmAngle = angle3D(RS, RE, RW);
+    const handDistance = distance3D(LW, RW);
+
+    // Both arms extended, body straight
+    if ((leftArmAngle > 150 || rightArmAngle > 150) && handDistance < 1) {
+      return POSE_CATEGORIES.TWO_HAND_STANDING;
+    }
+  }
+
   // Default to two-handed standing
-  return POSE_CATEGORIES.TWO_HAND_STANDING;
+  return POSE_CATEGORIES.UNKNOWN;
 };
 
 // Rule sets for each pose category
@@ -111,8 +122,8 @@ export const POSE_RULES = {
       // Feet spacing ≈ shoulder width (±20%)
       total++;
       if (LA && RA && LS && RS) {
-        const ankleW = Math.abs(LA.x - RA.x);
-        const shoulderW = Math.abs(LS.x - RS.x);
+        const ankleW = distance3D(LA, RA);
+        const shoulderW = distance3D(LS, RS);
         if (
           ankleW > 0 &&
           shoulderW > 0 &&
@@ -124,55 +135,55 @@ export const POSE_RULES = {
           issues.push(t("feetSpacingIncorrect"));
         }
       } else {
-        issues.push(t("cannotSeeFeetShoulders"));
+        // issues.push(t("cannotSeeFeetShoulders"));
       }
 
       // Knee bend (each leg 160–175°)
       total++;
       if (LH && LK && LA) {
-        const ang = angleAt(LK, LH, LA);
+        const ang = angle3D(LH, LK, LA);
         if (ang !== null && ang >= 160 && ang <= 175) score++;
         else issues.push(t("leftKneeNotBent"));
-      } else issues.push(t("leftLegNotVisible"));
+      } //else issues.push(t("leftLegNotVisible"));
 
       total++;
       if (RH && RK && RA) {
-        const ang = angleAt(RK, RH, RA);
+        const ang = angle3D(RH, RK, RA);
         if (ang !== null && ang >= 160 && ang <= 175) score++;
         else issues.push(t("rightKneeNotBent"));
-      } else issues.push(t("rightLegNotVisible"));
+      } //else issues.push(t("rightLegNotVisible"));
 
       // Torso forward lean
       total++;
       if (LS && LH && LK) {
-        const torso = angleAt(LH, LS, LK);
+        const torso = angle3D(LS, LH, LK);
         if (torso !== null && torso < 175) score++;
         else issues.push(t("torsoTooUpright"));
-      } else issues.push(t("torsoLandmarksNotClear"));
+      } //else issues.push(t("torsoLandmarksNotClear"));
 
-      // Arms: front arm ~150–170°, rear arm ~90–120°
+      // Arms angles
       total++;
       if (LS && LE && LW) {
-        const a = angleAt(LE, LS, LW);
-        if (a !== null && a >= 150 && a <= 170) score++;
-        else issues.push(t("frontArmAngleIncorrect"));
+        const a = angle3D(LS, LE, LW);
+        if (a !== null && a >= 150 && a <= 175) score++;
+        else issues.push(t("frontArmAngleIncorrect", { angle: a.toFixed(1) }));
       } else issues.push(t("frontArmNotVisible"));
 
       total++;
       if (RS && RE && RW) {
-        const a = angleAt(RE, RS, RW);
-        if (a !== null && a >= 90 && a <= 120) score++;
-        else issues.push(t("rearArmAngleIncorrect"));
+        const a = angle3D(RS, RE, RW);
+        if (a !== null && a >= 150 && a <= 175) score++;
+        else issues.push(t("rearArmAngleIncorrect", { angle: a.toFixed(1) }));
       } else issues.push(t("rearArmNotVisible"));
 
-      // Head tilt
+      // Arm angle with body
       total++;
-      if (LEar && REar && LS && RS) {
-        const earDiff = Math.abs(LEar.y - REar.y);
-        const shoulderDiff = Math.abs(LS.y - RS.y);
-        if (earDiff <= Math.max(10, shoulderDiff * 0.3)) score++;
-        else issues.push(t("headTiltedTooMuch"));
-      } else issues.push(t("headLandmarksNotClear"));
+      if (LH && LS && LE) {
+        const a = angle3D(LH, LS, LE);
+        if (a !== null && ((a >= 35 && a <= 45) || (a >= 85 && a <= 95)))
+          score++;
+        else issues.push(t("armAngleIncorrect", { angle: a.toFixed(1) }));
+      } else issues.push(t("frontArmNotVisible"));
 
       return { issues, score, total };
     },
@@ -202,8 +213,8 @@ export const POSE_RULES = {
       // Feet spacing (wider than two-hand stance)
       total++;
       if (LA && RA && LS && RS) {
-        const ankleW = Math.abs(LA.x - RA.x);
-        const shoulderW = Math.abs(LS.x - RS.x);
+        const ankleW = distance3D(LA, RA);
+        const shoulderW = distance3D(LS, RS);
         if (
           ankleW > 0 &&
           shoulderW > 0 &&
@@ -221,32 +232,44 @@ export const POSE_RULES = {
       // Knee bend (more pronounced)
       total++;
       if (LH && LK && LA) {
-        const ang = angleAt(LK, LH, LA);
-        if (ang !== null && ang >= 150 && ang <= 170) score++;
+        const ang = angle3D(LH, LK, LA);
+        if (ang !== null && ang >= 150 && ang <= 180) score++;
         else issues.push(t("leftKneeBendIncorrect"));
       } else issues.push(t("leftLegNotVisible"));
 
       total++;
       if (RH && RK && RA) {
-        const ang = angleAt(RK, RH, RA);
-        if (ang !== null && ang >= 150 && ang <= 170) score++;
+        const ang = angle3D(RH, RK, RA);
+        if (ang !== null && ang >= 150 && ang <= 180) score++;
         else issues.push(t("rightKneeBendIncorrect"));
       } else issues.push(t("rightLegNotVisible"));
 
       // Extended arm (shooting arm)
       total++;
-      if (LS && LE && LW) {
-        const a = angleAt(LE, LS, LW);
-        if (a !== null && a >= 160 && a <= 180) score++;
-        else issues.push(t("extendedArmNotStraight"));
+      if (RS && RE && RW) {
+        const a = angle3D(RS, RE, RW);
+        if (a !== null && a >= 150 && a <= 180) score++;
+        else issues.push(t("extendedArmNotStraight", { angle: a.toFixed(1) }));
+      } else issues.push(t("frontArmNotVisible"));
+
+      // Arm angle with body
+      total++;
+      if (RS && RE && RH) {
+        const a = angle3D(RE, RS, RH);
+        if (a !== null && ((a >= 30 && a <= 50) || (a >= 80 && a <= 100)))
+          score++;
+        else issues.push(t("armAngleIncorrect", { angle: a.toFixed(1) }));
       } else issues.push(t("frontArmNotVisible"));
 
       // Support arm position
       total++;
-      if (RS && RE && RW) {
-        const a = angleAt(RE, RS, RW);
-        if (a !== null && a >= 60 && a <= 120) score++;
-        else issues.push(t("supportArmPositionIncorrect"));
+      if (LS && LE && LW) {
+        const a = angle3D(LS, LE, LW);
+        if (a !== null && a >= 60 && a <= 135) score++;
+        else
+          issues.push(
+            t("supportArmPositionIncorrect", { angle: a.toFixed(1) })
+          );
       } else issues.push(t("supportArmNotVisible"));
 
       return { issues, score, total };
@@ -277,14 +300,14 @@ export const POSE_RULES = {
       // Knee angles (should be bent significantly)
       total++;
       if (LH && LK && LA) {
-        const ang = angleAt(LK, LH, LA);
+        const ang = angle3D(LH, LK, LA);
         if (ang !== null && ang >= 80 && ang <= 120) score++;
         else issues.push(t("leftKneeNotBentEnough"));
       } else issues.push(t("leftLegNotVisible"));
 
       total++;
       if (RH && RK && RA) {
-        const ang = angleAt(RK, RH, RA);
+        const ang = angle3D(RH, RK, RA);
         if (ang !== null && ang >= 80 && ang <= 120) score++;
         else issues.push(t("rightKneeNotBentEnough"));
       } else issues.push(t("rightLegNotVisible"));
@@ -292,7 +315,7 @@ export const POSE_RULES = {
       // Hip position (should be lower)
       total++;
       if (LS && LH && LK) {
-        const hipKneeAngle = angleAt(LH, LS, LK);
+        const hipKneeAngle = angle3D(LS, LH, LK);
         if (hipKneeAngle !== null && hipKneeAngle >= 60 && hipKneeAngle <= 100)
           score++;
         else issues.push(t("hipPositionTooHigh"));
@@ -301,14 +324,14 @@ export const POSE_RULES = {
       // Arm positions (similar to standing but adjusted for height)
       total++;
       if (LS && LE && LW) {
-        const a = angleAt(LE, LS, LW);
+        const a = angle3D(LS, LE, LW);
         if (a !== null && a >= 140 && a <= 170) score++;
         else issues.push(t("frontArmAngleIncorrect"));
       } else issues.push(t("frontArmNotVisible"));
 
       total++;
       if (RS && RE && RW) {
-        const a = angleAt(RE, RS, RW);
+        const a = angle3D(RS, RE, RW);
         if (a !== null && a >= 80 && a <= 130) score++;
         else issues.push(t("rearArmAngleIncorrect"));
       } else issues.push(t("rearArmNotVisible"));
@@ -337,8 +360,8 @@ export const POSE_RULES = {
       // Arms should be close together
       total++;
       if (LW && RW) {
-        const wristDist = dist(LW, RW);
-        const shoulderDist = dist(LS, RS);
+        const wristDist = distance3D(LW, RW);
+        const shoulderDist = distance3D(LS, RS);
         if (wristDist < shoulderDist * 0.4) score++;
         else issues.push(t("handsNotCloseEnough"));
       } else issues.push(t("handsNotVisible"));
@@ -346,14 +369,14 @@ export const POSE_RULES = {
       // Elbows should be bent
       total++;
       if (LS && LE && LW) {
-        const a = angleAt(LE, LS, LW);
+        const a = angle3D(LS, LE, LW);
         if (a !== null && a >= 60 && a <= 120) score++;
         else issues.push(t("leftElbowNotBentEnough"));
       } else issues.push(t("frontArmNotVisible"));
 
       total++;
       if (RS && RE && RW) {
-        const a = angleAt(RE, RS, RW);
+        const a = angle3D(RS, RE, RW);
         if (a !== null && a >= 60 && a <= 120) score++;
         else issues.push(t("rightElbowNotBentEnough"));
       } else issues.push(t("rearArmNotVisible"));

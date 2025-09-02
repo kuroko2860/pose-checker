@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import ImageDetailPopup from "./ImageDetailPopup";
 import { t } from "../utils/translations";
 

@@ -3,8 +3,7 @@ import PoseAnalyzer from "../components/PoseAnalyzer";
 import CanvasRenderer from "../components/CanvasRenderer";
 import { memoryManager } from "../utils/memoryManager";
 import { createCaptureFilter } from "../utils/captureFilter";
-import { POSE_CATEGORIES } from "../utils/poseCategories";
-import { getLanguage, t } from "../utils/translations";
+import { t } from "../utils/translations";
 
 const usePoseDetection = () => {
   const [detector, setDetector] = useState(null);
@@ -35,13 +34,14 @@ const usePoseDetection = () => {
   const { renderPose, renderImage } = CanvasRenderer();
 
   const runFrame = useCallback(async () => {
-    if (mode === "image" || !detector || !videoRef.current || !isRunning) return;
+    if (mode === "image" || !detector || !videoRef.current || !isRunning)
+      return;
 
     const currentTime = performance.now();
     const timeSinceLastFrame = currentTime - lastFrameTimeRef.current;
-    
+
     // Limit frame rate to reduce memory usage
-    if (timeSinceLastFrame < (1000 / FRAME_RATE_LIMIT)) {
+    if (timeSinceLastFrame < 1000 / FRAME_RATE_LIMIT) {
       if (isRunning) {
         animationFrameRef.current = requestAnimationFrame(runFrame);
       }
@@ -52,7 +52,10 @@ const usePoseDetection = () => {
 
     try {
       const video = videoRef.current;
-      const poses = await detector.estimatePoses(video);
+      console.log(video.videoWidth, video.videoHeight);
+      const poses = await detector.estimatePoses(video, {
+        flipHorizontal: false,
+      });
 
       if (poses.length > 0) {
         const keypoints = poses[0].keypoints;
@@ -64,10 +67,14 @@ const usePoseDetection = () => {
           setIsCapturing(false);
           setIsInCapturedMode(true);
           setStatus(t("poseCapturingAnalyzing"));
-          
+
           // Analyze the captured pose
-          const analysis = analyzePose(keypoints, referencePose, selectedPoseCategory);
-          
+          const analysis = analyzePose(
+            poses[0].keypoints3D,
+            referencePose,
+            selectedPoseCategory
+          );
+
           setStatus(analysis.status);
           setRules(analysis.rules);
           setReferenceStatus(analysis.referenceStatus);
@@ -77,8 +84,12 @@ const usePoseDetection = () => {
 
         // Normal real-time analysis (only if not capturing and not in captured mode)
         if (!isCapturing && !isInCapturedMode) {
-          const analysis = analyzePose(keypoints, referencePose, selectedPoseCategory);
-          
+          const analysis = analyzePose(
+            poses[0].keypoints3D,
+            referencePose,
+            selectedPoseCategory
+          );
+
           setStatus(analysis.status);
           setRules(analysis.rules);
           setReferenceStatus(analysis.referenceStatus);
@@ -86,23 +97,34 @@ const usePoseDetection = () => {
 
           // Auto-capture logic
           if (autoCaptureEnabled && analysis.score < 70) {
-            const shouldCapture = captureFilterRef.current.shouldCapture(keypoints, analysis.score);
+            const shouldCapture = captureFilterRef.current.shouldCapture(
+              keypoints,
+              analysis.score
+            );
             if (shouldCapture) {
               // Auto-capture the current frame
               const canvas = canvasRef.current;
-              const imageData = canvas.toDataURL('image/jpeg', 0.8);
+              const imageData = canvas.toDataURL("image/jpeg", 0.8);
               const timestamp = new Date().toISOString();
-              
-              setCapturedImages(prev => [...prev, {
-                id: Date.now(),
-                imageData,
-                timestamp,
-                poseCategory: analysis.detectedCategory,
-                score: analysis.score,
-                issues: analysis.rules
-              }]);
-              
-              setStatus(t("autoCaptured", { name: analysis.poseInfo.name, score: analysis.score }));
+
+              setCapturedImages((prev) => [
+                ...prev,
+                {
+                  id: Date.now(),
+                  imageData,
+                  timestamp,
+                  poseCategory: analysis.detectedCategory,
+                  score: analysis.score,
+                  issues: analysis.rules,
+                },
+              ]);
+
+              setStatus(
+                t("autoCaptured", {
+                  name: analysis.poseInfo.name,
+                  score: analysis.score,
+                })
+              );
             }
           }
         }
@@ -126,7 +148,18 @@ const usePoseDetection = () => {
     if (isRunning && !isCapturing && !isInCapturedMode) {
       animationFrameRef.current = requestAnimationFrame(runFrame);
     }
-  }, [detector, mode, referencePose, isRunning, isCapturing, isInCapturedMode, selectedPoseCategory, autoCaptureEnabled, analyzePose, renderPose]);
+  }, [
+    detector,
+    mode,
+    referencePose,
+    isRunning,
+    isCapturing,
+    isInCapturedMode,
+    selectedPoseCategory,
+    autoCaptureEnabled,
+    analyzePose,
+    renderPose,
+  ]);
 
   const analyzeImage = async (imageElement) => {
     try {
@@ -136,8 +169,12 @@ const usePoseDetection = () => {
         const keypoints = poses[0].keypoints;
         renderImage(canvasRef, imageElement, keypoints);
 
-        const analysis = analyzePose(keypoints, referencePose, selectedPoseCategory);
-        
+        const analysis = analyzePose(
+          poses[0].keypoints3D,
+          referencePose,
+          selectedPoseCategory
+        );
+
         setStatus(analysis.status);
         setRules(analysis.rules);
         setReferenceStatus(analysis.referenceStatus);
@@ -275,7 +312,7 @@ const usePoseDetection = () => {
       stopAnimation();
       // Clear any remaining references
       if (videoRef.current && videoRef.current.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+        videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
       }
     };
   }, [stopAnimation]);
@@ -296,19 +333,19 @@ const usePoseDetection = () => {
     detectedPoseCategory,
     autoCaptureEnabled,
     capturedImages,
-    
+
     // Refs
     videoRef,
     canvasRef,
     fileInputRef,
     referenceFileInputRef,
-    
+
     // Setters
     setDetector,
     setStatus,
     setIsRunning,
     setSelectedPoseCategory,
-    
+
     // Actions
     analyzeImage,
     setReference,
@@ -319,7 +356,7 @@ const usePoseDetection = () => {
     toggleAutoCapture,
     clearCapturedImages,
     runFrame,
-    stopAnimation
+    stopAnimation,
   };
 };
 
