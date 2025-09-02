@@ -4,7 +4,7 @@ import { POSE_CONFIG } from "../utils/const";
 // Capture filter configuration
 export const CAPTURE_CONFIG = {
   CONFIDENCE_THRESHOLD: 15, // Minimum keypoints with score > POSE_CONFIG.CONFIDENT_SCORE
-  STABILITY_FRAMES: 20, // Consecutive frames with same classification
+  STABILITY_FRAMES: 10, // Consecutive frames with same classification
   ERROR_THRESHOLD: 70, // Rule score threshold (below this = bad pose)
   CAPTURE_COOLDOWN: 60, // Frames to wait before capturing another bad pose
 };
@@ -29,9 +29,9 @@ export class CaptureFilter {
     // 2. Stability filter
     const currentClassification = classifyPose(keypoints);
     this.updateClassificationHistory(currentClassification);
-    if (currentClassification === POSE_CATEGORIES.UNKNOWN) {
-      return false;
-    }
+    // if (currentClassification === POSE_CATEGORIES.UNKNOWN) {
+    //   return false;
+    // }
 
     if (!this.passesStabilityFilter()) {
       return false;
