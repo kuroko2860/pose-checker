@@ -354,8 +354,8 @@ export const POSE_RULES = {
       const RE = byName(keypoints, "right_elbow");
       const LW = byName(keypoints, "left_wrist");
       const RW = byName(keypoints, "right_wrist");
-      const LEar = byName(keypoints, "left_ear");
-      const REar = byName(keypoints, "right_ear");
+      const RH = byName(keypoints, "left_heel");
+      const LH = byName(keypoints, "right_heel");
 
       // Arms should be close together
       total++;
@@ -366,38 +366,46 @@ export const POSE_RULES = {
         else issues.push(t("handsNotCloseEnough"));
       } else issues.push(t("handsNotVisible"));
 
-      // Elbows should be bent
+      // Arm angle with body
       total++;
-      if (LS && LE && LW) {
-        const a = angle3D(LS, LE, LW);
-        if (a !== null && a >= 60 && a <= 120) score++;
-        else issues.push(t("leftElbowNotBentEnough"));
+      if (RS && RE && RH) {
+        const a = angle3D(RE, RS, RH);
+        if (a !== null && a >= 30 && a <= 70) score++;
+        else issues.push(t("armAngleIncorrect", { angle: a.toFixed(1) }));
       } else issues.push(t("frontArmNotVisible"));
+
+      // Elbows should be bent
+      // total++;
+      // if (LS && LE && LW) {
+      //   const a = angle3D(LS, LE, LW);
+      //   if (a !== null && a >= 60 && a <= 120) score++;
+      //   else issues.push(t("leftElbowNotBentEnough"));
+      // } else issues.push(t("frontArmNotVisible"));
 
       total++;
       if (RS && RE && RW) {
         const a = angle3D(RS, RE, RW);
-        if (a !== null && a >= 60 && a <= 120) score++;
+        if (a !== null && a >= 40 && a <= 120) score++;
         else issues.push(t("rightElbowNotBentEnough"));
       } else issues.push(t("rearArmNotVisible"));
 
       // Head should be looking down
-      total++;
-      if (LEar && REar && LS && RS) {
-        const earDiff = Math.abs(LEar.y - REar.y);
-        const shoulderDiff = Math.abs(LS.y - RS.y);
-        if (earDiff <= Math.max(5, shoulderDiff * 0.2)) score++;
-        else issues.push(t("headNotLevel"));
-      } else issues.push(t("headLandmarksNotClear"));
+      // total++;
+      // if (LEar && REar && LS && RS) {
+      //   const earDiff = Math.abs(LEar.y - REar.y);
+      //   const shoulderDiff = Math.abs(LS.y - RS.y);
+      //   if (earDiff <= Math.max(5, shoulderDiff * 0.2)) score++;
+      //   else issues.push(t("headNotLevel"));
+      // } else issues.push(t("headLandmarksNotClear"));
 
       // Gun should be pointed down (wrist position)
-      total++;
-      if (LW && RW && LS && RS) {
-        const wristY = (LW.y + RW.y) / 2;
-        const shoulderY = (LS.y + RS.y) / 2;
-        if (wristY > shoulderY) score++;
-        else issues.push(t("gunNotPointedDown"));
-      } else issues.push(t("armPositionsNotClear"));
+      // total++;
+      // if (LW && RW && LS && RS) {
+      //   const wristY = (LW.y + RW.y) / 2;
+      //   const shoulderY = (LS.y + RS.y) / 2;
+      //   if (wristY > shoulderY) score++;
+      //   else issues.push(t("gunNotPointedDown"));
+      // } else issues.push(t("armPositionsNotClear"));
 
       return { issues, score, total };
     },
