@@ -362,7 +362,7 @@ export const POSE_RULES = {
       if (LW && RW) {
         const wristDist = distance3D(LW, RW);
         const shoulderDist = distance3D(LS, RS);
-        if (wristDist < shoulderDist * 0.4) score++;
+        if (wristDist < shoulderDist * 0.7) score++;
         else issues.push(t("handsNotCloseEnough"));
       } else issues.push(t("handsNotVisible"));
 
