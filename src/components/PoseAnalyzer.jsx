@@ -1,4 +1,4 @@
-import { dist } from "../utils/compute";
+import { distance3D } from "../utils/compute";
 import { names, POSE_CONFIG } from "../utils/const";
 import { t } from "../utils/translations";
 
@@ -28,8 +28,8 @@ const PoseAnalyzer = () => {
     const rhs = cur["right_hip"];
 
     let scale = null;
-    if (ls && rs) scale = dist(ls, rs);
-    else if (lhs && rhs) scale = dist(lhs, rhs);
+    if (ls && rs) scale = distance3D(ls, rs);
+    else if (lhs && rhs) scale = distance3D(lhs, rhs);
     if (!scale || scale === 0) scale = 100;
 
     let sum = 0;
@@ -38,7 +38,7 @@ const PoseAnalyzer = () => {
       const a = cur[n];
       const b = ref[n];
       if (a && b) {
-        sum += dist(a, b) / scale;
+        sum += distance3D(a, b) / scale;
         cnt++;
       }
     }

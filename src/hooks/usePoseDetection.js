@@ -70,7 +70,7 @@ const usePoseDetection = () => {
 
           // Analyze the captured pose
           const analysis = analyzePose(
-            keypoints,
+            poses[0].keypoints3D,
             referencePose,
             selectedPoseCategory
           );
@@ -85,7 +85,7 @@ const usePoseDetection = () => {
         // Normal real-time analysis (only if not capturing and not in captured mode)
         if (!isCapturing && !isInCapturedMode) {
           const analysis = analyzePose(
-            keypoints,
+            poses[0].keypoints3D,
             referencePose,
             selectedPoseCategory
           );
@@ -170,7 +170,7 @@ const usePoseDetection = () => {
         renderImage(canvasRef, imageElement, keypoints);
 
         const analysis = analyzePose(
-          keypoints,
+          poses[0].keypoints3D,
           referencePose,
           selectedPoseCategory
         );

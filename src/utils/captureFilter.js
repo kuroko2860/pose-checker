@@ -1,13 +1,12 @@
-import { classifyPose } from "./poseCategories";
+import { POSE_CATEGORIES, classifyPose } from "./poseCategories";
 import { POSE_CONFIG } from "../utils/const";
-
 
 // Capture filter configuration
 export const CAPTURE_CONFIG = {
-  CONFIDENCE_THRESHOLD: 10, // Minimum keypoints with score > POSE_CONFIG.CONFIDENT_SCORE
-  STABILITY_FRAMES: 10, // Consecutive frames with same classification
+  CONFIDENCE_THRESHOLD: 15, // Minimum keypoints with score > POSE_CONFIG.CONFIDENT_SCORE
+  STABILITY_FRAMES: 20, // Consecutive frames with same classification
   ERROR_THRESHOLD: 70, // Rule score threshold (below this = bad pose)
-  CAPTURE_COOLDOWN: 30, // Frames to wait before capturing another bad pose
+  CAPTURE_COOLDOWN: 60, // Frames to wait before capturing another bad pose
 };
 
 export class CaptureFilter {
@@ -30,7 +29,10 @@ export class CaptureFilter {
     // 2. Stability filter
     const currentClassification = classifyPose(keypoints);
     this.updateClassificationHistory(currentClassification);
-    
+    if (currentClassification === POSE_CATEGORIES.UNKNOWN) {
+      return false;
+    }
+
     if (!this.passesStabilityFilter()) {
       return false;
     }
@@ -53,7 +55,9 @@ export class CaptureFilter {
 
   // Confidence filter: only accept frames with enough keypoints
   passesConfidenceFilter(keypoints) {
-    const visibleKeypoints = keypoints.filter(k => k.score > POSE_CONFIG.CONFIDENT_SCORE).length;
+    const visibleKeypoints = keypoints.filter(
+      (k) => k.score > POSE_CONFIG.CONFIDENT_SCORE
+    ).length;
     return visibleKeypoints >= CAPTURE_CONFIG.CONFIDENCE_THRESHOLD;
   }
 
@@ -63,10 +67,14 @@ export class CaptureFilter {
       return false;
     }
 
-    const recentClassifications = this.classificationHistory.slice(-CAPTURE_CONFIG.STABILITY_FRAMES);
+    const recentClassifications = this.classificationHistory.slice(
+      -CAPTURE_CONFIG.STABILITY_FRAMES
+    );
     const firstClassification = recentClassifications[0];
-    
-    return recentClassifications.every(classification => classification === firstClassification);
+
+    return recentClassifications.every(
+      (classification) => classification === firstClassification
+    );
   }
 
   // Error trigger: only capture if rule score is below threshold
@@ -83,11 +91,13 @@ export class CaptureFilter {
   // Update classification history
   updateClassificationHistory(classification) {
     this.classificationHistory.push(classification);
-    
+
     // Keep only recent history (2x stability frames for buffer)
     const maxHistory = CAPTURE_CONFIG.STABILITY_FRAMES * 2;
     if (this.classificationHistory.length > maxHistory) {
-      this.classificationHistory = this.classificationHistory.slice(-maxHistory);
+      this.classificationHistory = this.classificationHistory.slice(
+        -maxHistory
+      );
     }
   }
 
@@ -102,15 +112,19 @@ export class CaptureFilter {
   // Get current classification (most recent stable classification)
   getCurrentClassification() {
     if (this.classificationHistory.length === 0) return null;
-    
+
     // Return the most common classification in recent history
-    const recent = this.classificationHistory.slice(-CAPTURE_CONFIG.STABILITY_FRAMES);
+    const recent = this.classificationHistory.slice(
+      -CAPTURE_CONFIG.STABILITY_FRAMES
+    );
     const counts = {};
-    recent.forEach(classification => {
+    recent.forEach((classification) => {
       counts[classification] = (counts[classification] || 0) + 1;
     });
-    
-    return Object.entries(counts).reduce((a, b) => counts[a] > counts[b] ? a : b)[0];
+
+    return Object.entries(counts).reduce((a, b) =>
+      counts[a] > counts[b] ? a : b
+    )[0];
   }
 
   // Get filter status for debugging
@@ -123,7 +137,7 @@ export class CaptureFilter {
       badPoseEventActive: this.badPoseEventActive,
       currentClassification: this.getCurrentClassification(),
       stabilityFrames: this.classificationHistory.length,
-      isStable: this.passesStabilityFilter()
+      isStable: this.passesStabilityFilter(),
     };
   }
 }

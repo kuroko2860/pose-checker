@@ -179,6 +179,7 @@ const i18n = {
     headNotLevel: "Head not level (should be looking down)",
     gunNotPointedDown: "Gun not pointed down",
     armPositionsNotClear: "Arm positions not clear",
+    armAngleIncorrect: "Arm angle incorrect",
   },
   vi: {
     // App
@@ -329,17 +330,17 @@ const i18n = {
     rightLegNotVisible: "Chân phải không nhìn thấy rõ",
     torsoTooUpright: "Thân người quá thẳng (nên hơi nghiêng về phía trước)",
     torsoLandmarksNotClear: "Các điểm mốc thân người không rõ",
-    frontArmAngleIncorrect: "Góc tay trước không đúng (cần duỗi nhiều/ít hơn)",
+    frontArmAngleIncorrect: "Góc tay trước không đúng, {angle} độ",
     frontArmNotVisible: "Tay trước không nhìn thấy rõ",
-    rearArmAngleIncorrect: "Góc tay sau không đúng",
+    rearArmAngleIncorrect: "Góc tay sau không đúng, {angle} độ",
     rearArmNotVisible: "Tay sau không nhìn thấy rõ",
     headTiltedTooMuch: "Đầu nghiêng quá nhiều",
     headLandmarksNotClear: "Các điểm mốc đầu không rõ",
     feetSpacingWider: "Khoảng cách chân không đúng (cần tư thế rộng hơn)",
     leftKneeBendIncorrect: "Độ cong đầu gối trái không đúng",
     rightKneeBendIncorrect: "Độ cong đầu gối phải không đúng",
-    extendedArmNotStraight: "Tay duỗi không đủ thẳng",
-    supportArmPositionIncorrect: "Vị trí tay hỗ trợ không đúng",
+    extendedArmNotStraight: "Tay duỗi không đủ thẳng, {angle} độ",
+    supportArmPositionIncorrect: "Vị trí tay hỗ trợ không đúng, {angle} độ",
     supportArmNotVisible: "Tay hỗ trợ không nhìn thấy rõ",
     leftKneeNotBentEnough: "Đầu gối trái không cong đủ cho tư thế quỳ",
     rightKneeNotBentEnough: "Đầu gối phải không cong đủ cho tư thế quỳ",
@@ -352,6 +353,7 @@ const i18n = {
     headNotLevel: "Đầu không ngang bằng (nên nhìn xuống)",
     gunNotPointedDown: "Súng không chĩa xuống",
     armPositionsNotClear: "Vị trí tay không rõ",
+    armAngleIncorrect: "Góc tay không đúng, {angle} độ",
   },
 };
 
