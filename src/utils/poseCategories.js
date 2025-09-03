@@ -1,4 +1,4 @@
-import { angle3D, distance3D } from "./compute";
+import { angle3D, angleAt, distance3D } from "./compute";
 import { POSE_CONFIG } from "../utils/const";
 import { t } from "./translations";
 
@@ -199,6 +199,8 @@ export const POSE_RULES = {
 
       const LS = byName(keypoints, "left_shoulder");
       const RS = byName(keypoints, "right_shoulder");
+      const RE = byName(keypoints, "right_elbow");
+      const RW = byName(keypoints, "right_wrist");
       const LH = byName(keypoints, "left_hip");
       const RH = byName(keypoints, "right_hip");
       const LK = byName(keypoints, "left_knee");
@@ -206,9 +208,7 @@ export const POSE_RULES = {
       const LA = byName(keypoints, "left_ankle");
       const RA = byName(keypoints, "right_ankle");
       const LE = byName(keypoints, "left_elbow");
-      const RE = byName(keypoints, "right_elbow");
       const LW = byName(keypoints, "left_wrist");
-      const RW = byName(keypoints, "right_wrist");
 
       // Feet spacing (wider than two-hand stance)
       total++;
@@ -247,8 +247,8 @@ export const POSE_RULES = {
       // Extended arm (shooting arm)
       total++;
       if (RS && RE && RW) {
-        const a = angle3D(RS, RE, RW);
-        if (a !== null && a >= 150 && a <= 180) score++;
+        const a = angleAt(RE, RS, RW);
+        if (a !== null && a >= 165 && a <= 180) score++;
         else issues.push(t("extendedArmNotStraight", { angle: a.toFixed(1) }));
       } else issues.push(t("frontArmNotVisible"));
 
@@ -256,8 +256,7 @@ export const POSE_RULES = {
       total++;
       if (RS && RE && RH) {
         const a = angle3D(RE, RS, RH);
-        if (a !== null && ((a >= 30 && a <= 50) || (a >= 80 && a <= 100)))
-          score++;
+        if (a !== null && a >= 80 && a <= 100) score++;
         else issues.push(t("armAngleIncorrect", { angle: a.toFixed(1) }));
       } else issues.push(t("frontArmNotVisible"));
 
