@@ -4,8 +4,9 @@ import { getLanguage, t } from "../utils/translations";
 const StatusDisplay = ({
   status,
   rules,
-  referenceStatus,
   detectedPoseCategory,
+  multiPersonAnalysis,
+  detectedPeople,
 }) => {
   const getStatusColor = (status) => {
     if (status.includes("✅")) return "text-green-400";
@@ -15,10 +16,24 @@ const StatusDisplay = ({
     return "text-blue-400";
   };
 
-  const getReferenceColor = (referenceStatus) => {
-    if (referenceStatus.includes("✅")) return "text-green-400";
-    if (referenceStatus.includes("❌")) return "text-red-400";
-    return "text-gray-400";
+  const getPersonColor = (personIndex) => {
+    const colors = [
+      "border-lime-400 bg-lime-400/10",
+      "border-red-400 bg-red-400/10",
+      "border-teal-400 bg-teal-400/10",
+      "border-blue-400 bg-blue-400/10",
+      "border-yellow-400 bg-yellow-400/10",
+      "border-orange-400 bg-orange-400/10",
+      "border-pink-400 bg-pink-400/10",
+      "border-purple-400 bg-purple-400/10",
+    ];
+    return colors[personIndex % colors.length];
+  };
+
+  const getScoreColor = (score) => {
+    if (score >= 80) return "text-green-400";
+    if (score >= 60) return "text-yellow-400";
+    return "text-red-400";
   };
 
   const detectedPoseInfo = detectedPoseCategory
@@ -27,7 +42,7 @@ const StatusDisplay = ({
 
   return (
     <div className="space-y-6">
-      {/* Main Status Card */}
+      {/* Overall Status Card */}
       <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-xl">
         <div className="text-center mb-4">
           <h3 className="text-xl font-bold text-center text-white">
@@ -35,72 +50,136 @@ const StatusDisplay = ({
           </h3>
         </div>
 
-        <div
+        {/* <div
           className={`text-center text-lg font-semibold ${getStatusColor(
             status
           )}`}
         >
           {status}
-        </div>
+        </div> */}
 
-        {/* Detected Pose Category */}
-        {detectedPoseInfo && (
-          <div className="mt-4 p-3 bg-blue-900/20 border border-blue-600 rounded-lg">
-            <div className="flex items-center justify-center space-x-2 mb-2">
-              <span className="text-blue-400">🎯</span>
-              <span className="text-blue-300 font-medium">
-                {t("detected")} {detectedPoseInfo.name}
-              </span>
-            </div>
-            {detectedPoseInfo.description && (
-              <p className="text-blue-400/70 text-sm text-center">
-                {detectedPoseInfo.description}
-              </p>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Improvement Areas */}
-      {rules &&
-        rules.includes(getLanguage() === "en" ? "Issues: " : "Lỗi: ") && (
-          <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-xl">
-            <div className="flex items-center space-x-2 mb-3">
-              <span className="text-xl">🎯</span>
-              <h4 className="text-lg font-semibold text-red-400">
-                {t("improvementAreas")}
-              </h4>
-            </div>
-            <div className="text-red-300 text-sm leading-relaxed h-44 overflow-y-auto pr-2">
-              {rules
-                .replace(getLanguage() === "en" ? "Issues: " : "Lỗi: ", "")
-                .split(", ")
-                .map((issue, index) => (
-                  <div key={index} className="flex items-start space-x-2 mb-2">
-                    <span className="text-red-400 mt-1">•</span>
-                    <span>{issue}</span>
+        {/* Individual Scores Summary */}
+        {multiPersonAnalysis &&
+          multiPersonAnalysis.people &&
+          multiPersonAnalysis.people.length > 0 && (
+            <div className="mt-4 p-3 bg-blue-900/20 border border-blue-600 rounded-lg">
+              <div className="flex items-center justify-center space-x-2 mb-3">
+                <span className="text-blue-400">📊</span>
+                <span className="text-blue-300 font-medium">
+                  {multiPersonAnalysis.totalPeople} {t("peopleDetected")}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                {multiPersonAnalysis.people.map((person, index) => (
+                  <div
+                    key={person.trackId || index}
+                    className="flex items-center justify-between border-b-2 border-gray-600 pb-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <div
+                        className={`w-2 h-2 rounded-full ${getPersonColor(index)
+                          .split(" ")[0]
+                          .replace("border-", "bg-")}`}
+                      ></div>
+                      <span className="text-blue-300 text-sm">
+                        {t("person")} {index + 1}
+                      </span>
+                    </div>
+                    <div
+                      className={`text-sm font-bold ${getScoreColor(
+                        person.score
+                      )}`}
+                    >
+                      {person.score}%
+                    </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+      </div>
+
+      {/* Individual Person Results */}
+      {multiPersonAnalysis &&
+        multiPersonAnalysis.people &&
+        multiPersonAnalysis.people.length > 0 && (
+          <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-xl">
+            <div className="flex items-center space-x-2 mb-4">
+              <span className="text-xl">👥</span>
+              <h4 className="text-lg font-semibold text-white">
+                {t("individualResults")}
+              </h4>
+            </div>
+
+            <div className="space-y-4">
+              {multiPersonAnalysis.people.map((person, index) => {
+                const personInfo = person.poseInfo
+                  ? getPoseCategoryInfo(person.detectedCategory)
+                  : null;
+                return (
+                  <div
+                    key={person.trackId || index}
+                    className={`p-4 rounded-lg border-l-4 ${getPersonColor(
+                      index
+                    )}`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+                        <div
+                          className={`w-3 h-3 rounded-full ${getPersonColor(
+                            index
+                          )
+                            .split(" ")[0]
+                            .replace("border-", "bg-")}`}
+                        ></div>
+                        <span className="font-semibold text-white">
+                          {t("person")} {index + 1}
+                        </span>
+                        <span className="text-gray-400 text-sm">
+                          (ID: {person.trackId})
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-400">
+                          {t("score")}:
+                        </span>
+                        <div
+                          className={`text-xl font-bold px-3 py-1 rounded-full ${getScoreColor(
+                            person.score
+                          )} bg-gray-700/50`}
+                        >
+                          {person.score}%
+                        </div>
+                      </div>
+                    </div>
+
+                    {personInfo && (
+                      <div className="mb-2">
+                        <span className="text-sm text-gray-300">
+                          {t("detected")}:{" "}
+                          <span className="font-medium">{personInfo.name}</span>
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="text-sm">
+                      <div
+                        className={`${
+                          person.score >= 70 ? "text-green-400" : "text-red-400"
+                        }`}
+                      >
+                        {person.status}
+                      </div>
+                      {person.rules && (
+                        <div className="mt-1 text-gray-400">{person.rules}</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
-
-      {/* Reference Comparison */}
-      <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-xl">
-        <div className="flex items-center space-x-2 mb-3">
-          <span className="text-xl">📊</span>
-          <h4 className="text-lg font-semibold text-gray-300">
-            {t("referenceComparison")}
-          </h4>
-        </div>
-        <div
-          className={`text-center text-sm ${getReferenceColor(
-            referenceStatus
-          )}`}
-        >
-          {referenceStatus}
-        </div>
-      </div>
 
       {/* Shooting Tips */}
       <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-xl">

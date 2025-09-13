@@ -1,35 +1,27 @@
 import { useState, useEffect } from "react";
-import * as poseDetection from "@tensorflow-models/pose-detection";
-import * as tf from "@tensorflow/tfjs";
-import "@tensorflow/tfjs-backend-webgl";
+import PoseApiService from "../services/poseApi";
 
 const PoseDetector = ({ onDetectorReady, onStatusChange }) => {
-  const [_, setDetector] = useState(null);
+  const [apiService] = useState(() => new PoseApiService());
 
   const initPoseDetector = async () => {
     try {
-      await tf.setBackend("webgl");
-      await tf.ready();
-      const det = await poseDetection.createDetector(
-        poseDetection.SupportedModels.BlazePose,
-        {
-          runtime: "tfjs",
-          modelType: "full", // options: "lite" | "full" | "heavy"
-          enableSmoothing: true,
-          // enableTracking: true,
-          // modelType: poseDetection.movenet.modelType.THUNDER,
-        }
-      );
-      setDetector(det);
-      onDetectorReady(det);
-      onStatusChange("Model loaded");
+      onStatusChange("Connecting to pose API...");
+
+      onStatusChange("Connected to pose API");
+      onDetectorReady(apiService);
     } catch (error) {
-      onStatusChange("Error loading pose detection model: " + error.message);
+      onStatusChange("Error connecting to pose API: " + error.message);
     }
   };
 
   useEffect(() => {
     initPoseDetector();
+
+    // Cleanup on unmount
+    return () => {
+      apiService.disconnectWebSocket();
+    };
   }, []);
 
   return null; // This component doesn't render anything

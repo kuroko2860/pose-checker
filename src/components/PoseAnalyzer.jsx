@@ -5,7 +5,7 @@ import { t } from "../utils/translations";
 import { classifyPose, getPoseCategoryInfo } from "../utils/poseCategories";
 
 const PoseAnalyzer = () => {
-  const SIMILARITY_THRESHOLD = 85;
+  // const SIMILARITY_THRESHOLD = 85;
 
   // Helper functions
   const computeSimilarity = (current, reference) => {
@@ -47,11 +47,7 @@ const PoseAnalyzer = () => {
     return Math.max(0, 100 - avg * 100);
   };
 
-  const analyzePose = (
-    keypoints,
-    referencePose,
-    selectedPoseCategory = null
-  ) => {
+  const analyzePose = (keypoints, selectedPoseCategory = null) => {
     // Auto-classify pose if no specific category is selected
     const detectedCategory = selectedPoseCategory || classifyPose(keypoints);
 
@@ -69,21 +65,9 @@ const PoseAnalyzer = () => {
       rules = t("issues", { issues: issues.join(", ") });
     }
 
-    let referenceStatus = t("noReferenceSet");
-    if (referencePose) {
-      const sim = computeSimilarity(keypoints, referencePose);
-      const refStatus =
-        sim >= SIMILARITY_THRESHOLD ? t("refAcceptable") : t("refDifferent");
-      referenceStatus = t("referenceSimilarity", {
-        sim: sim.toFixed(1),
-        status: refStatus,
-      });
-    }
-
     return {
       status,
       rules,
-      referenceStatus,
       detectedCategory,
       poseInfo,
       score: percent,
