@@ -14,7 +14,13 @@ const CanvasRenderer = () => {
   ];
 
   const drawKeypoints = (ctx, keypoints, personIndex = 0) => {
+    if (!keypoints || keypoints.length === 0) return;
+
     const color = personColors[personIndex % personColors.length];
+
+    // Batch drawing operations for better performance
+    ctx.fillStyle = color;
+    ctx.beginPath();
 
     // Handle both new format [x, y] arrays and old format {x, y, name} objects
     keypoints.forEach((kp, index) => {
@@ -28,11 +34,14 @@ const CanvasRenderer = () => {
         y = kp.y;
       }
 
-      ctx.beginPath();
+      // Skip invalid keypoints
+      if (isNaN(x) || isNaN(y) || x < 0 || y < 0) return;
+
+      ctx.moveTo(x + 4, y);
       ctx.arc(x, y, 4, 0, 2 * Math.PI);
-      ctx.fillStyle = color;
-      ctx.fill();
     });
+
+    ctx.fill();
 
     // Draw skeleton lines
     const getByIndex = (index) => {
@@ -47,6 +56,10 @@ const CanvasRenderer = () => {
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
 
+    // Batch skeleton line drawing for better performance
+    ctx.beginPath();
+    let hasValidLines = false;
+
     edges.forEach(([a, b]) => {
       // Get keypoint indices from names
       const aIndex = names.indexOf(a);
@@ -60,14 +73,30 @@ const CanvasRenderer = () => {
       ) {
         const p = getByIndex(aIndex);
         const q = getByIndex(bIndex);
-        if (p && q) {
-          ctx.beginPath();
-          ctx.moveTo(p.x, p.y);
+
+        // Skip invalid points
+        if (
+          p &&
+          q &&
+          !isNaN(p.x) &&
+          !isNaN(p.y) &&
+          !isNaN(q.x) &&
+          !isNaN(q.y)
+        ) {
+          if (!hasValidLines) {
+            ctx.moveTo(p.x, p.y);
+            hasValidLines = true;
+          } else {
+            ctx.moveTo(p.x, p.y);
+          }
           ctx.lineTo(q.x, q.y);
-          ctx.stroke();
         }
       }
     });
+
+    if (hasValidLines) {
+      ctx.stroke();
+    }
   };
 
   const drawBoundingBox = (ctx, bbox, personIndex = 0, trackId = "0") => {
@@ -120,22 +149,42 @@ const CanvasRenderer = () => {
     // Draw the video frame
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // Handle both single person (array of keypoints) and multi-person (array of people) formats
+    // Handle different keypoint formats
     if (Array.isArray(keypoints) && keypoints.length > 0) {
-      // Check if it's multi-person format (each element has keypoints_2d)
+      // Check if it's multi-person format
       if (keypoints[0].keypoints_2d) {
-        // Multi-person format
+        // Server data format (keypoints_2d) - convert [x,y] arrays to {x,y} objects
         keypoints.forEach((person, index) => {
           if (person.keypoints_2d && person.keypoints_2d.length > 0) {
-            drawKeypoints(ctx, person.keypoints_2d, index);
+            // Convert [x,y] arrays to {x,y} objects for drawKeypoints
+            const convertedKeypoints = person.keypoints_2d.map(
+              ([x, y], kpIndex) => ({
+                x,
+                y,
+                name: `keypoint_${kpIndex}`,
+                score: 1.0,
+              })
+            );
+            drawKeypoints(ctx, convertedKeypoints, index);
             // Draw bounding box if available
             if (person.bbox) {
               drawBoundingBox(ctx, person.bbox, index, person.track_id);
             }
           }
         });
+      } else if (keypoints[0].keypoints) {
+        // Interpolated/converted data format (keypoints)
+        keypoints.forEach((person, index) => {
+          if (person.keypoints && person.keypoints.length > 0) {
+            drawKeypoints(ctx, person.keypoints, index);
+            // Draw bounding box if available
+            if (person.bbox) {
+              drawBoundingBox(ctx, person.bbox, index, person.trackId);
+            }
+          }
+        });
       } else {
-        // Single person format (array of keypoint objects)
+        // Single person format (direct array of keypoint objects)
         drawKeypoints(ctx, keypoints, 0);
       }
     }
@@ -164,8 +213,13 @@ const CanvasRenderer = () => {
         let keypoints, bbox, trackId;
 
         if (person.keypoints_2d) {
-          // Raw server data format
-          keypoints = person.keypoints_2d;
+          // Raw server data format - convert [x,y] arrays to {x,y} objects
+          keypoints = person.keypoints_2d.map(([x, y], kpIndex) => ({
+            x,
+            y,
+            name: `keypoint_${kpIndex}`,
+            score: 1.0,
+          }));
           bbox = person.bbox;
           trackId = person.track_id;
         } else if (person.keypoints) {

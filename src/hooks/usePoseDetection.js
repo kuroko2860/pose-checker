@@ -23,6 +23,7 @@ const usePoseDetection = () => {
   const [multiPersonAnalysis, setMultiPersonAnalysis] = useState(null);
   const [uploadedImage, setUploadedImage] = useState(null);
 
+
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -31,10 +32,11 @@ const usePoseDetection = () => {
   const captureFilterRef = useRef(createCaptureFilter());
   const frameCounterRef = useRef(0);
   const FRAME_RATE_LIMIT = 30; // Limit to 30 FPS to reduce memory usage
-  const POSE_ESTIMATION_INTERVAL = 5; // Process pose every 5th frame
+  const POSE_ESTIMATION_INTERVAL = 5; // Send every 5th frame to server
 
   const { analyzePose } = PoseAnalyzer();
   const { renderPose, renderImage } = CanvasRenderer();
+
 
   const runFrame = useCallback(async () => {
     if (!detector || !isRunning)
@@ -69,37 +71,28 @@ const usePoseDetection = () => {
     // Increment frame counter
     frameCounterRef.current += 1;
 
-    // Only process pose estimation every 5th frame
-    const shouldProcessPose = frameCounterRef.current % POSE_ESTIMATION_INTERVAL === 0;
-
     try {
       const video = videoRef.current;
-      
-      // Always render the current frame for smooth display
-      if (detectedPeople.length > 0) {
-        const keypoints = detectedPeople.length > 0 ? detectedPeople[0].keypoints : [];
-        renderPose(canvasRef, videoRef, keypoints);
-      }
 
-      // Only send frame for pose estimation every 5th frame
-      if (shouldProcessPose) {
-        console.log(`Processing pose estimation (frame ${frameCounterRef.current})`);
-        
-        // Capture frame from video and convert to JPEG binary
+      // Only send every 5th frame to server for pose estimation
+      if (frameCounterRef.current % POSE_ESTIMATION_INTERVAL === 0) {
         const canvas = document.createElement("canvas");
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
+
         // Convert canvas to JPEG blob with quality settings
         canvas.toBlob(async (blob) => {
           // Send frame to API for pose estimation
           // Use WebSocket for real-time analysis
           await detector.sendFrameForAnalysis(blob);
         }, "image/jpeg", 0.85); // 85% quality for better compression
-      } else {
-        console.log(`Skipping pose estimation (frame ${frameCounterRef.current})`);
+      }
+
+      // Always render the current frame with detected poses (if any)
+      if (detectedPeople.length > 0) {
+        renderPose(canvasRef, videoRef, detectedPeople);
       }
     } catch (error) {
       console.error("Error in pose detection:", error);
@@ -110,7 +103,7 @@ const usePoseDetection = () => {
     if (isRunning && !isCapturing && !isInCapturedMode) {
       animationFrameRef.current = requestAnimationFrame(runFrame);
     }
-  }, [detector, mode, isRunning, isCapturing, isInCapturedMode, detectedPeople, renderPose, uploadedImage, renderImage]);
+  }, [detector, mode, isRunning, detectedPeople, renderPose, uploadedImage, renderImage]);
 
   // Create stable message handler
   const handleWebSocketMessage = useCallback((result) => {
@@ -118,14 +111,17 @@ const usePoseDetection = () => {
       // Convert server data to keypoints format
       const peopleData = convertServerDataToKeypoints(result.poses);
       setDetectedPeople(peopleData);
-      
-      // If we have an image from server, render it with poses
-      if (result.image) {
+
+      // For webcam mode, always render current video frame with fresh pose data
+      if (mode === "webcam") {
+        renderPose(canvasRef, videoRef, peopleData);
+      } else if (result.image) {
+        // For image upload mode, render the server's processed image
         const img = new Image();
         img.onload = () => {
           renderImage(canvasRef, img, result.poses);
         };
-        
+
         // Handle both binary and base64 image data
         if (result.image instanceof ArrayBuffer || result.image instanceof Uint8Array) {
           // Binary data - convert to blob URL
@@ -136,10 +132,6 @@ const usePoseDetection = () => {
         } else {
           console.error("Unsupported image format received from server");
         }
-      } else {
-        // Fallback to video rendering
-        const keypoints = peopleData.length > 0 ? peopleData[0].keypoints : [];
-        renderPose(canvasRef, videoRef, keypoints);
       }
 
       // If capturing, store the pose and stop the animation loop
@@ -179,7 +171,7 @@ const usePoseDetection = () => {
               personAnalysis.score
             );
           });
-          
+
           if (shouldCapture) {
             // Auto-capture the current frame
             const canvas = canvasRef.current;
@@ -212,6 +204,7 @@ const usePoseDetection = () => {
       }
     }
   }, [
+    mode,
     isCapturing,
     isInCapturedMode,
     selectedPoseCategory,
@@ -229,43 +222,22 @@ const usePoseDetection = () => {
 
   // Handle image mode rendering
   useEffect(() => {
-    console.log("Image mode rendering effect triggered:", { mode, hasUploadedImage: !!uploadedImage, peopleCount: detectedPeople.length });
     if (mode === "image" && uploadedImage && detectedPeople.length > 0) {
-      console.log("Rendering image with pose data...");
       renderImage(canvasRef, uploadedImage, detectedPeople);
     }
   }, [mode, uploadedImage, detectedPeople, renderImage]);
 
   const analyzeImage = async (imageElement) => {
     try {
-      console.log("Starting image analysis...");
       const result = await detector.analyzeImage(imageElement);
-      console.log("Analysis result:", result);
 
       if (result && result.success && result.poses && result.poses.length > 0) {
-        console.log("Converting server data to keypoints...");
         // Convert server data to keypoints format
         const peopleData = convertServerDataToKeypoints(result.poses);
-        console.log("Converted people data:", peopleData);
         setDetectedPeople(peopleData);
-        
-        // If server returned processed image, use it; otherwise use original
-        if (result.image) {
-          const img = new Image();
-          img.onload = () => {
-            renderImage(canvasRef, img, result.poses);
-          };
-          
-          // Handle base64 image from REST API
-          if (typeof result.image === 'string') {
-            img.src = `data:image/jpeg;base64,${result.image}`;
-          } else {
-            console.error("Unexpected image format from REST API");
-            renderImage(canvasRef, imageElement, result.poses);
-          }
-        } else {
-          renderImage(canvasRef, imageElement, result.poses);
-        }
+
+        // REST API no longer returns image data, use original uploaded image
+        renderImage(canvasRef, imageElement, result.poses);
 
         // Analyze multiple people
         const analysis = analyzeMultiplePeople(peopleData, analyzePose, selectedPoseCategory);
@@ -278,7 +250,7 @@ const usePoseDetection = () => {
         // Fallback for testData format
         const peopleData = convertServerDataToKeypoints(result);
         setDetectedPeople(peopleData);
-        
+
         renderImage(canvasRef, imageElement, result);
 
         const analysis = analyzeMultiplePeople(peopleData, analyzePose, selectedPoseCategory);
