@@ -4,8 +4,9 @@ import { POSE_CONFIG } from "../utils/const";
 // Capture filter configuration
 export const CAPTURE_CONFIG = {
   CONFIDENCE_THRESHOLD: 15, // Minimum keypoints with score > POSE_CONFIG.CONFIDENT_SCORE
-  ERROR_THRESHOLD: 70, // Rule score threshold (below this = bad pose)
-  CAPTURE_COOLDOWN_MS: 1000, // Milliseconds to wait before capturing another bad pose (1 second)
+  MIN_ERROR_THRESHOLD: 25,
+  MAX_ERROR_THRESHOLD: 70, // Rule score threshold (below this = bad pose)
+  CAPTURE_COOLDOWN_MS: 2000, // Milliseconds to wait before capturing another bad pose (1 second)
   MAX_BAD_POSES: 10, // Maximum number of bad poses to keep
   STABILITY_FRAMES: 5, // Frames to wait for pose stability
   PREPARATION_FRAMES: 30, // Frames to wait after pose selection before capturing
@@ -53,37 +54,17 @@ export class CaptureFilter {
     return currentClassification !== null && currentClassification !== POSE_CATEGORIES.UNKNOWN;
   }
 
-  // Preparation filter: wait for user to be ready after pose selection
-  passesPreparationFilter() {
-    if (!this.isPrepared) {
-      const framesSinceSelection = this.currentFrame - this.poseSelectionFrame;
-      this.isPrepared = framesSinceSelection >= CAPTURE_CONFIG.PREPARATION_FRAMES;
-    }
-    return this.isPrepared;
-  }
+ 
 
   // Error trigger: only capture if rule score is below threshold
   passesErrorTrigger(ruleScore) {
-    return ruleScore < CAPTURE_CONFIG.ERROR_THRESHOLD;
+    return ruleScore > CAPTURE_CONFIG.MIN_ERROR_THRESHOLD && ruleScore < CAPTURE_CONFIG.MAX_ERROR_THRESHOLD;
   }
 
   // Cooldown filter: avoid capturing too frequently (1 second)
   passesCooldownFilter() {
     const timeSinceLastCapture = Date.now() - this.lastCaptureTime;
     return timeSinceLastCapture >= CAPTURE_CONFIG.CAPTURE_COOLDOWN_MS;
-  }
-
-  // Update classification history
-  updateClassificationHistory(classification) {
-    this.classificationHistory.push(classification);
-
-    // Keep only recent history (2x stability frames for buffer)
-    const maxHistory = CAPTURE_CONFIG.STABILITY_FRAMES * 2;
-    if (this.classificationHistory.length > maxHistory) {
-      this.classificationHistory = this.classificationHistory.slice(
-        -maxHistory
-      );
-    }
   }
 
   // Set the selected pose category
