@@ -83,6 +83,8 @@ class PoseApiService {
     try {
       // Convert to binary data using utility function
       const binaryData = await convertToBinaryData(imageData, 0.85);
+      
+      // Send binary image data directly
       this.socket.emit("frame", binaryData);
       return true;
     } catch (error) {

@@ -42,32 +42,6 @@ export const convertServerDataToKeypoints = (serverData) => {
   });
 };
 
-/**
- * Converts single person keypoints to the expected format
- * @param {Array} keypoints2D - 2D keypoints array
- * @param {Array} keypoints3D - 3D keypoints array (optional)
- * @param {string} trackId - Track ID for the person
- * @returns {Array} Converted keypoint data
- */
-export const convertSinglePersonKeypoints = (keypoints2D, keypoints3D = [], trackId = "0") => {
-  if (!Array.isArray(keypoints2D)) {
-    return [];
-  }
-
-  return keypoints2D.map(([x, y], index) => {
-    const name = names[index] || `keypoint_${index}`;
-    const z = keypoints3D[index]?.[2] || 0;
-    
-    return {
-      name,
-      x,
-      y,
-      z,
-      score: 1.0, // Default confidence score
-      trackId
-    };
-  });
-};
 
 /**
  * Analyzes multiple people and returns combined results

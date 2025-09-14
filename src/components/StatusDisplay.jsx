@@ -7,6 +7,8 @@ const StatusDisplay = ({
   detectedPoseCategory,
   multiPersonAnalysis,
   detectedPeople,
+  mode = "shooting",
+  defenderAnalysis = null,
 }) => {
   const getStatusColor = (status) => {
     if (status.includes("✅")) return "text-green-400";
@@ -181,35 +183,64 @@ const StatusDisplay = ({
           </div>
         )}
 
-      {/* Shooting Tips */}
+      {/* Tips Section - Different for each mode */}
       <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-xl">
         <div className="flex items-center space-x-2 mb-3">
           <span className="text-xl">💡</span>
           <h4 className="text-lg font-semibold text-yellow-400">
-            {t("shootingTips")}
+            {mode === "martial_art" ? t("trainingTips") : t("shootingTips")}
           </h4>
         </div>
         <div className="text-gray-300 text-sm space-y-2">
-          <div className="flex items-start space-x-2">
-            <span className="text-yellow-400 mt-1">•</span>
-            <span>{t("feetShoulderWidth")}</span>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-yellow-400 mt-1">•</span>
-            <span>{t("bendKnees")}</span>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-yellow-400 mt-1">•</span>
-            <span>{t("leanForward")}</span>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-yellow-400 mt-1">•</span>
-            <span>{t("keepHeadLevel")}</span>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-yellow-400 mt-1">•</span>
-            <span>{t("practiceRegularly")}</span>
-          </div>
+          {mode === "martial_art" ? (
+            // Martial Art Tips
+            <>
+              <div className="flex items-start space-x-2">
+                <span className="text-yellow-400 mt-1">•</span>
+                <span>{t("martialArtTip1")}</span>
+              </div>
+              <div className="flex items-start space-x-2">
+                <span className="text-yellow-400 mt-1">•</span>
+                <span>{t("martialArtTip2")}</span>
+              </div>
+              <div className="flex items-start space-x-2">
+                <span className="text-yellow-400 mt-1">•</span>
+                <span>{t("martialArtTip3")}</span>
+              </div>
+              <div className="flex items-start space-x-2">
+                <span className="text-yellow-400 mt-1">•</span>
+                <span>{t("martialArtTip4")}</span>
+              </div>
+              <div className="flex items-start space-x-2">
+                <span className="text-yellow-400 mt-1">•</span>
+                <span>{t("martialArtTip5")}</span>
+              </div>
+            </>
+          ) : (
+            // Shooting Tips
+            <>
+              <div className="flex items-start space-x-2">
+                <span className="text-yellow-400 mt-1">•</span>
+                <span>{t("feetShoulderWidth")}</span>
+              </div>
+              <div className="flex items-start space-x-2">
+                <span className="text-yellow-400 mt-1">•</span>
+                <span>{t("bendKnees")}</span>
+              </div>
+              <div className="flex items-start space-x-2">
+                <span className="text-yellow-400 mt-1">•</span>
+                <span>{t("leanForward")}</span>
+              </div>
+              <div className="flex items-start space-x-2">
+                <span className="text-yellow-400 mt-1">•</span>
+                <span>{t("keepHeadLevel")}</span>
+              </div>
+              <div className="flex items-start space-x-2">
+                <span className="text-yellow-400 mt-1">•</span>
+                <span>{t("practiceRegularly")}</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

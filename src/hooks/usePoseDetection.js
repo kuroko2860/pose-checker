@@ -91,9 +91,7 @@ const usePoseDetection = () => {
       }
 
       // Always render the current frame with detected poses (if any)
-      if (detectedPeople.length > 0) {
-        renderPose(canvasRef, videoRef, detectedPeople);
-      }
+      renderPose(canvasRef, videoRef, detectedPeople);
     } catch (error) {
       console.error("Error in pose detection:", error);
       setStatus(t("poseDetectionError"));
@@ -226,6 +224,23 @@ const usePoseDetection = () => {
       renderImage(canvasRef, uploadedImage, detectedPeople);
     }
   }, [mode, uploadedImage, detectedPeople, renderImage]);
+
+  // Initial render when video is ready (webcam mode)
+  useEffect(() => {
+    if (mode === "webcam" && videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      
+      // Set canvas size to match video
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      
+      // Initial render of video frame
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    }
+  }, [mode, videoRef.current?.videoWidth, videoRef.current?.videoHeight]);
 
   const analyzeImage = async (imageElement) => {
     try {
