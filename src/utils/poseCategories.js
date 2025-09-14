@@ -184,13 +184,13 @@ export const classifyPose = (keypoints) => {
 
       // Alternative: both legs significantly bent (kneeling position)
       if (
-        leftKneeAngle < 120 &&
+      leftKneeAngle < 120 &&
         rightKneeAngle < 120 &&
         Math.abs(leftKneeAngle - rightKneeAngle) > 20
-      ) {
-        return POSE_CATEGORIES.KNEELING;
-      }
+    ) {
+      return POSE_CATEGORIES.KNEELING;
     }
+  }
   }
 
   // 2. Check for CHECKING_GUN pose (arms close together, gun pointed down)
@@ -312,25 +312,25 @@ export const POSE_RULES = {
       if (legAngle < 20) {
         // PARALLEL STANCE ANALYSIS
         // 1. Feet spacing: 0.8 -> 1.2 * shoulder spacing
-        total++;
-        if (LA && RA && LS && RS) {
-          const ankleW = distance3D(LA, RA);
-          const shoulderW = distance3D(LS, RS);
-          if (
-            ankleW > 0 &&
-            shoulderW > 0 &&
-            ankleW >= shoulderW * 0.8 &&
-            ankleW <= shoulderW * 1.2
-          ) {
-            score++;
-          } else {
-            issues.push(t("feetSpacingIncorrect"));
-          }
+      total++;
+      if (LA && RA && LS && RS) {
+        const ankleW = distance3D(LA, RA);
+        const shoulderW = distance3D(LS, RS);
+        if (
+          ankleW > 0 &&
+          shoulderW > 0 &&
+          ankleW >= shoulderW * 0.8 &&
+          ankleW <= shoulderW * 1.2
+        ) {
+          score++;
+        } else {
+          issues.push(t("feetSpacingIncorrect"));
         }
+      }
 
         // 2. Each leg is straight (knee angle 170-180°)
-        total++;
-        if (LH && LK && LA) {
+      total++;
+      if (LH && LK && LA) {
           const leftKneeAng = angle3D(LH, LK, LA);
           if (
             leftKneeAng !== null &&
@@ -339,12 +339,14 @@ export const POSE_RULES = {
           ) {
             score++;
           } else {
-            issues.push(t("leftLegNotStraight"));
+            issues.push(t("leftLegNotStraight", {
+              angle: leftKneeAng?.toFixed(1) || "N/A"
+            }));
           }
         }
 
-        total++;
-        if (RH && RK && RA) {
+      total++;
+      if (RH && RK && RA) {
           const rightKneeAng = angle3D(RH, RK, RA);
           if (
             rightKneeAng !== null &&
@@ -353,14 +355,16 @@ export const POSE_RULES = {
           ) {
             score++;
           } else {
-            issues.push(t("rightLegNotStraight"));
+            issues.push(t("rightLegNotStraight", {
+              angle: rightKneeAng?.toFixed(1) || "N/A"
+            }));
           }
         }
 
         // 3. Body forward lean (torso angle < 175°)
-        total++;
-        if (LS && LH && LK) {
-          const torso = angle3D(LS, LH, LK);
+      total++;
+      if (LS && LH && LK) {
+        const torso = angle3D(LS, LH, LK);
           if (torso !== null && torso < 170) {
             score++;
           } else {
@@ -369,18 +373,20 @@ export const POSE_RULES = {
         }
 
         // 4. Both arms holding gun are straight (elbow angle 170-180°)
-        total++;
-        if (LS && LE && LW) {
+      total++;
+      if (LS && LE && LW) {
           const leftArmAng = angle3D(LS, LE, LW);
           if (leftArmAng !== null && leftArmAng >= 150 && leftArmAng <= 180) {
             score++;
           } else {
-            issues.push(t("leftArmNotStraight"));
+            issues.push(t("leftArmNotStraight", {
+              angle: leftArmAng?.toFixed(1) || "N/A"
+            }));
           }
         }
 
-        total++;
-        if (RS && RE && RW) {
+      total++;
+      if (RS && RE && RW) {
           const rightArmAng = angle3D(RS, RE, RW);
           if (
             rightArmAng !== null &&
@@ -389,7 +395,9 @@ export const POSE_RULES = {
           ) {
             score++;
           } else {
-            issues.push(t("rightArmNotStraight"));
+            issues.push(t("rightArmNotStraight", {
+              angle: rightArmAng?.toFixed(1) || "N/A"
+            }));
           }
         }
 
@@ -442,7 +450,9 @@ export const POSE_RULES = {
           ) {
             score++;
           } else {
-            issues.push(t("leftLegNotStraight"));
+            issues.push(t("leftLegNotStraight", {
+              angle: leftKneeAng?.toFixed(1) || "N/A"
+            }));
           }
         }
 
@@ -456,7 +466,9 @@ export const POSE_RULES = {
           ) {
             score++;
           } else {
-            issues.push(t("rightLegNotStraight"));
+            issues.push(t("rightLegNotStraight", {
+              angle: rightKneeAng?.toFixed(1) || "N/A"
+            }));
           }
         }
 
@@ -467,7 +479,9 @@ export const POSE_RULES = {
           if (legAngle !== null && legAngle >= 30 && legAngle <= 50) {
             score++;
           } else {
-            issues.push(t("legAngleIncorrect"));
+            issues.push(t("legAngleIncorrect", {
+              angle: legAngle?.toFixed(1) || "N/A"
+            }));
           }
         }
 
@@ -478,7 +492,9 @@ export const POSE_RULES = {
           if (gunArmAng !== null && gunArmAng >= 160 && gunArmAng <= 180) {
             score++;
           } else {
-            issues.push(t("gunArmNotStraight"));
+            issues.push(t("gunArmNotStraight", {
+              angle: gunArmAng?.toFixed(1) || "N/A"
+            }));
           }
         }
 
@@ -501,15 +517,15 @@ export const POSE_RULES = {
         }
 
         // 5. Support arm: angle at shoulder with body 35-50°, angle at wrist 70-120°
-        total++;
-        if (LH && LS && LE) {
+      total++;
+      if (LH && LS && LE) {
           const supportArmBodyAng = angle3D(LH, LS, LE);
           if (
             supportArmBodyAng !== null &&
             supportArmBodyAng >= 30 &&
             supportArmBodyAng <= 50
           ) {
-            score++;
+          score++;
           } else {
             issues.push(
               t("supportArmBodyAngleIncorrect", {
@@ -701,7 +717,9 @@ export const POSE_RULES = {
         if (otherKneeAng !== null && otherKneeAng >= 40 && otherKneeAng <= 70) {
           score++;
         } else {
-          issues.push(t("otherLegKneeAngleIncorrect"));
+          issues.push(t("otherLegKneeAngleIncorrect", {
+            angle: otherKneeAng?.toFixed(1) || "N/A"
+          }));
         }
       } else if (supportLeg === "right" && LH && LK && LA) {
         const otherKneeAng = angle3D(LH, LK, LA);
@@ -709,7 +727,9 @@ export const POSE_RULES = {
         if (otherKneeAng !== null && otherKneeAng >= 40 && otherKneeAng <= 70) {
           score++;
         } else {
-          issues.push(t("otherLegKneeAngleIncorrect"));
+          issues.push(t("otherLegKneeAngleIncorrect", {
+            angle: otherKneeAng?.toFixed(1) || "N/A"
+          }));
         }
       }
 
@@ -726,7 +746,9 @@ export const POSE_RULES = {
         if (gunArmAng !== null && gunArmAng >= 150 && gunArmAng <= 180) {
           score++;
         } else {
-          issues.push(t("gunArmNotStraight"));
+          issues.push(t("gunArmNotStraight", {
+            angle: gunArmAng?.toFixed(1) || "N/A"
+          }));
         }
       } else if (gunArm === "right" && RS && RE && RW) {
         const gunArmAng = angle3D(RS, RE, RW);
@@ -734,7 +756,9 @@ export const POSE_RULES = {
         if (gunArmAng !== null && gunArmAng >= 150 && gunArmAng <= 180) {
           score++;
         } else {
-          issues.push(t("gunArmNotStraight"));
+          issues.push(t("gunArmNotStraight", {
+            angle: gunArmAng?.toFixed(1) || "N/A"
+          }));
         }
       }
 
@@ -849,7 +873,9 @@ export const POSE_RULES = {
         if (leftKneeAng !== null && leftKneeAng >= 150 && leftKneeAng <= 180) {
           score++;
         } else {
-          issues.push(t("leftLegNotStraight"));
+          issues.push(t("leftLegNotStraight", {
+            angle: leftKneeAng?.toFixed(1) || "N/A"
+          }));
         }
       }
 
@@ -863,7 +889,9 @@ export const POSE_RULES = {
         ) {
           score++;
         } else {
-          issues.push(t("rightLegNotStraight"));
+          issues.push(t("rightLegNotStraight", {
+            angle: rightKneeAng?.toFixed(1) || "N/A"
+          }));
         }
       }
 

@@ -5,7 +5,7 @@ import { POSE_CONFIG } from "../utils/const";
 export const CAPTURE_CONFIG = {
   CONFIDENCE_THRESHOLD: 15, // Minimum keypoints with score > POSE_CONFIG.CONFIDENT_SCORE
   ERROR_THRESHOLD: 70, // Rule score threshold (below this = bad pose)
-  CAPTURE_COOLDOWN: 60, // Frames to wait before capturing another bad pose
+  CAPTURE_COOLDOWN_MS: 1000, // Milliseconds to wait before capturing another bad pose (1 second)
   MAX_BAD_POSES: 10, // Maximum number of bad poses to keep
   STABILITY_FRAMES: 5, // Frames to wait for pose stability
   PREPARATION_FRAMES: 30, // Frames to wait after pose selection before capturing
@@ -14,7 +14,7 @@ export const CAPTURE_CONFIG = {
 export class CaptureFilter {
   constructor() {
     this.classificationHistory = [];
-    this.lastCaptureFrame = 0;
+    this.lastCaptureTime = 0;
     this.currentFrame = 0;
     this.badPoseEventActive = false;
     this.selectedPoseCategory = null;
@@ -27,23 +27,8 @@ export class CaptureFilter {
   shouldCapture(keypoints, ruleScore, currentClassification) {
     this.currentFrame++;
 
-    // 1. Confidence filter
-    if (!this.passesConfidenceFilter(keypoints)) {
-      return false;
-    }
-
     // 2. Pose selection filter - only capture if a specific pose is selected
-    if (!this.passesPoseSelectionFilter()) {
-      return false;
-    }
-
-    // 3. Preparation filter - wait for user to be ready
-    if (!this.passesPreparationFilter()) {
-      return false;
-    }
-
-    // 4. Stability filter - only capture if pose is stable and not unknown
-    if (!this.passesStabilityFilter(currentClassification)) {
+    if (!this.passesPoseSelectionFilter(currentClassification)) {
       return false;
     }
 
@@ -58,22 +43,14 @@ export class CaptureFilter {
     }
 
     // All filters passed - capture this frame
-    this.lastCaptureFrame = this.currentFrame;
+    this.lastCaptureTime = Date.now();
     this.badPoseEventActive = true;
     return true;
   }
 
-  // Confidence filter: only accept frames with enough keypoints
-  passesConfidenceFilter(keypoints) {
-    const visibleKeypoints = keypoints.filter(
-      (k) => k.score > POSE_CONFIG.CONFIDENT_SCORE
-    ).length;
-    return visibleKeypoints >= CAPTURE_CONFIG.CONFIDENCE_THRESHOLD;
-  }
-
   // Pose selection filter: only capture if a specific pose is selected
-  passesPoseSelectionFilter() {
-    return this.selectedPoseCategory !== null && this.selectedPoseCategory !== POSE_CATEGORIES.UNKNOWN;
+  passesPoseSelectionFilter(currentClassification) {
+    return currentClassification !== null && currentClassification !== POSE_CATEGORIES.UNKNOWN;
   }
 
   // Preparation filter: wait for user to be ready after pose selection
@@ -85,36 +62,15 @@ export class CaptureFilter {
     return this.isPrepared;
   }
 
-  // Stability filter: only capture if pose is stable and not unknown
-  passesStabilityFilter(currentClassification) {
-    if (currentClassification === POSE_CATEGORIES.UNKNOWN) {
-      return false;
-    }
-
-    // Update classification history
-    this.updateClassificationHistory(currentClassification);
-
-    // Check if pose is stable
-    if (this.classificationHistory.length < CAPTURE_CONFIG.STABILITY_FRAMES) {
-      return false;
-    }
-
-    // Check if the last few classifications are consistent
-    const recent = this.classificationHistory.slice(-CAPTURE_CONFIG.STABILITY_FRAMES);
-    const isStable = recent.every(classification => classification === currentClassification);
-    
-    return isStable;
-  }
-
   // Error trigger: only capture if rule score is below threshold
   passesErrorTrigger(ruleScore) {
     return ruleScore < CAPTURE_CONFIG.ERROR_THRESHOLD;
   }
 
-  // Cooldown filter: avoid capturing too frequently
+  // Cooldown filter: avoid capturing too frequently (1 second)
   passesCooldownFilter() {
-    const framesSinceLastCapture = this.currentFrame - this.lastCaptureFrame;
-    return framesSinceLastCapture >= CAPTURE_CONFIG.CAPTURE_COOLDOWN;
+    const timeSinceLastCapture = Date.now() - this.lastCaptureTime;
+    return timeSinceLastCapture >= CAPTURE_CONFIG.CAPTURE_COOLDOWN_MS;
   }
 
   // Update classification history
@@ -165,7 +121,7 @@ export class CaptureFilter {
   // Reset the filter (useful when switching modes)
   reset() {
     this.classificationHistory = [];
-    this.lastCaptureFrame = 0;
+    this.lastCaptureTime = 0;
     this.currentFrame = 0;
     this.badPoseEventActive = false;
     this.selectedPoseCategory = null;
@@ -197,8 +153,8 @@ export class CaptureFilter {
     return {
       currentFrame: this.currentFrame,
       classificationHistory: this.classificationHistory.slice(-5), // Last 5
-      lastCaptureFrame: this.lastCaptureFrame,
-      framesSinceLastCapture: this.currentFrame - this.lastCaptureFrame,
+      lastCaptureTime: this.lastCaptureTime,
+      timeSinceLastCapture: Date.now() - this.lastCaptureTime,
       badPoseEventActive: this.badPoseEventActive,
       currentClassification: this.getCurrentClassification(),
       stabilityFrames: this.classificationHistory.length,

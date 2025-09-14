@@ -165,15 +165,21 @@ const StatusDisplay = ({
                     )}
 
                     <div className="text-sm">
-                      <div
+                      {/* <div
                         className={`${
                           person.score >= 70 ? "text-green-400" : "text-red-400"
                         }`}
                       >
                         {person.status}
-                      </div>
+                      </div> */}
                       {person.rules && (
-                        <div className="mt-1 text-gray-400">{person.rules}</div>
+                        <div className="mt-1 text-gray-400">
+                          {person.rules.split(", ").map((rule, index) => (
+                            <div key={index} className="mb-1">
+                              • {rule.trim()}
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
                   </div>

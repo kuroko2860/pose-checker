@@ -47,19 +47,6 @@ const AutoCapturePanel = ({
         </button>
       </div>
 
-      {/* Auto-capture info */}
-      <div className="mb-4 p-3 bg-gray-700/50 rounded-lg">
-        <h4 className="text-sm font-medium text-gray-300 mb-2">
-          {t("howItWorks")}
-        </h4>
-        <ul className="text-xs text-gray-400 space-y-1">
-          <li>• {t("capturesFrames")}</li>
-          <li>• {t("requiresStablePose")}</li>
-          <li>• {t("minimumKeypoints")}</li>
-          <li>• {t("frameCooldown")}</li>
-        </ul>
-      </div>
-
       {/* Captured images section */}
       {autoCaptureEnabled && (
         <div className="mt-6">

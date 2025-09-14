@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import PoseAnalyzer from "../components/PoseAnalyzer";
 import CanvasRenderer from "../components/CanvasRenderer";
 import { createCaptureFilter } from "../utils/captureFilter";
@@ -34,8 +34,13 @@ const usePoseDetection = () => {
   const FRAME_RATE_LIMIT = 30; // Limit to 30 FPS to reduce memory usage
   const POSE_ESTIMATION_INTERVAL = 5; // Send every 5th frame to server
 
-  const { analyzePose } = PoseAnalyzer();
-  const { renderPose, renderImage } = CanvasRenderer();
+  const { analyzePose } = useMemo(() => PoseAnalyzer(), []);
+  const { renderPose, renderImage } = useMemo(() => CanvasRenderer(), []);
+
+  // Stable analysis function to prevent infinite loops
+  const performAnalysis = useCallback((peopleData, poseCategory) => {
+    return analyzeMultiplePeople(peopleData, analyzePose, poseCategory);
+  }, [analyzePose]);
 
 
   const runFrame = useCallback(async () => {
@@ -140,7 +145,7 @@ const usePoseDetection = () => {
         setStatus(t("poseCapturingAnalyzing"));
 
         // Analyze multiple people
-        const analysis = analyzeMultiplePeople(peopleData, analyzePose, selectedPoseCategory);
+        const analysis = performAnalysis(peopleData, selectedPoseCategory);
         setMultiPersonAnalysis(analysis);
 
         setStatus(analysis.status);
@@ -152,7 +157,7 @@ const usePoseDetection = () => {
       // Normal real-time analysis (only if not capturing and not in captured mode)
       if (!isCapturing && !isInCapturedMode) {
         // Analyze multiple people
-        const analysis = analyzeMultiplePeople(peopleData, analyzePose, selectedPoseCategory);
+        const analysis = performAnalysis(peopleData, selectedPoseCategory);
         setMultiPersonAnalysis(analysis);
 
         setStatus(analysis.status);
@@ -160,14 +165,17 @@ const usePoseDetection = () => {
         setDetectedPoseCategory(analysis.people[0]?.detectedCategory || null);
 
         // Auto-capture logic
-        if (autoCaptureEnabled && analysis.averageScore < 70) {
-          // Check if any person should be captured
+        if (autoCaptureEnabled) {
+          // Check if any person has score < 70 for the selected pose type
           const shouldCapture = peopleData.some((person, index) => {
             const personAnalysis = analysis.people[index];
-            return captureFilterRef.current.shouldCapture(
-              person.keypoints,
-              personAnalysis.score
-            );
+            // Only capture if person has score < 70 for the selected pose type
+              return captureFilterRef.current.shouldCapture(
+                person.keypoints,
+                personAnalysis.score,
+                personAnalysis.detectedCategory)
+              
+            
           });
 
           if (shouldCapture) {
@@ -186,11 +194,12 @@ const usePoseDetection = () => {
                 analysis: analysis,
                 totalPeople: analysis.totalPeople,
                 averageScore: analysis.averageScore,
+                poseCategory: selectedPoseCategory,
               },
             ]);
 
             setStatus(
-              `Auto-captured ${analysis.totalPeople} people (avg score: ${analysis.averageScore}%)`
+              `Auto-captured ${analysis.totalPeople} people with score < 70 for ${selectedPoseCategory} (avg score: ${analysis.averageScore}%)`
             );
           }
         }
@@ -207,7 +216,7 @@ const usePoseDetection = () => {
     isInCapturedMode,
     selectedPoseCategory,
     autoCaptureEnabled,
-    analyzePose,
+    performAnalysis,
     renderPose,
   ]);
 
@@ -224,6 +233,18 @@ const usePoseDetection = () => {
       renderImage(canvasRef, uploadedImage, detectedPeople);
     }
   }, [mode, uploadedImage, detectedPeople, renderImage]);
+
+  // Handle pose category changes - re-analyze for both webcam and image modes
+  useEffect(() => {
+    if (detectedPeople.length > 0 && !isCapturing && !isInCapturedMode) {
+      // Re-analyze with new pose category for both modes
+      const analysis = performAnalysis(detectedPeople, selectedPoseCategory);
+      setMultiPersonAnalysis(analysis);
+      setStatus(analysis.status);
+      setRules(analysis.rules);
+      setDetectedPoseCategory(analysis.people[0]?.detectedCategory || null);
+    }
+  }, [selectedPoseCategory, detectedPeople, performAnalysis, isCapturing, isInCapturedMode]);
 
   // Initial render when video is ready (webcam mode)
   useEffect(() => {
@@ -254,8 +275,8 @@ const usePoseDetection = () => {
         // REST API no longer returns image data, use original uploaded image
         renderImage(canvasRef, imageElement, result.poses);
 
-        // Analyze multiple people
-        const analysis = analyzeMultiplePeople(peopleData, analyzePose, selectedPoseCategory);
+        // Analyze multiple people with selected pose category
+        const analysis = performAnalysis(peopleData, selectedPoseCategory);
         setMultiPersonAnalysis(analysis);
 
         setStatus(analysis.status);
@@ -268,7 +289,7 @@ const usePoseDetection = () => {
 
         renderImage(canvasRef, imageElement, result);
 
-        const analysis = analyzeMultiplePeople(peopleData, analyzePose, selectedPoseCategory);
+        const analysis = performAnalysis(peopleData, selectedPoseCategory);
         setMultiPersonAnalysis(analysis);
 
         setStatus(analysis.status);
