@@ -1,0 +1,12 @@
+{
+    "rewrites": [
+        {
+            "source": "/api/(.*)",
+            "destination": "http://103.78.3.31:5000/api/$1"
+        },
+        {
+            "source": "/socket.io/(.*)",
+            "destination": "http://103.78.3.31:5000/socket.io/$1"
+        }
+    ]
+}
