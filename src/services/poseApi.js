@@ -1,5 +1,5 @@
 import { io } from "socket.io-client";
-import API_CONFIG, { getApiUrl, getWsUrl, testData } from "../config/api.js";
+import API_CONFIG, { getApiUrl, getWsUrl } from "../config/api.js";
 import { convertToBinaryData, base64ToBinary } from "../utils/imageUtils.js";
 
 class PoseApiService {
@@ -29,9 +29,8 @@ class PoseApiService {
 
     try {
       this.onMessageCallback = onMessage;
-      this.socket = io("/", {
+      this.socket = io(this.wsUrl, {
         transports: ["websocket"], // force WebSocket transport
-        path: "/socket.io",
         reconnectionAttempts: this.maxReconnectAttempts,
         reconnectionDelay: API_CONFIG.WS_RECONNECT_DELAY,
         forceNew: true, // Force new connection
@@ -138,11 +137,14 @@ class PoseApiService {
 
       formData.append("file", jpegBlob, "image.jpg");
 
-      const response = await fetch("/api/image", {
-        method: "POST",
-        body: formData,
-        signal: controller.signal,
-      });
+      const response = await fetch(
+        getApiUrl(API_CONFIG.ENDPOINTS.ANALYZE_POSE),
+        {
+          method: "POST",
+          body: formData,
+          signal: controller.signal,
+        }
+      );
 
       clearTimeout(timeoutId);
 
