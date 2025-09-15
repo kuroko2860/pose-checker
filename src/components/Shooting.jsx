@@ -1,20 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import PoseDetector from "./PoseDetector";
 import CameraController from "./CameraController";
 import StatusDisplay from "./StatusDisplay";
 import ControlPanel from "./ControlPanel";
-import PerformanceMonitor from "./PerformanceMonitor";
 import usePoseDetection from "../hooks/usePoseDetection";
 import { t } from "../utils/translations";
 
 const ShootingStanceChecker = () => {
-  const [showPerformanceMonitor, setShowPerformanceMonitor] = useState(false);
-
   const {
     detector,
     status,
     rules,
-    referenceStatus,
     mode,
     isRunning,
     isCapturing,
@@ -23,16 +19,17 @@ const ShootingStanceChecker = () => {
     detectedPoseCategory,
     autoCaptureEnabled,
     capturedImages,
+    detectedPeople,
+    multiPersonAnalysis,
+    uploadedImage,
     videoRef,
     canvasRef,
     fileInputRef,
-    referenceFileInputRef,
     setDetector,
     setStatus,
     setIsRunning,
     setSelectedPoseCategory,
-    setReference,
-    handleReferenceImageUpload,
+
     toggleMode,
     handleImageUpload,
     toggleCapture,
@@ -63,14 +60,6 @@ const ShootingStanceChecker = () => {
                 </p>
               </div>
             </div>
-
-            {/* Performance Monitor Toggle */}
-            <button
-              onClick={() => setShowPerformanceMonitor(!showPerformanceMonitor)}
-              className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors duration-200"
-            >
-              {showPerformanceMonitor ? t("hide") : t("show")} {t("debug")}
-            </button>
           </div>
         </div>
       </div>
@@ -131,9 +120,7 @@ const ShootingStanceChecker = () => {
             <ControlPanel
               mode={mode}
               onToggleMode={toggleMode}
-              onSetReference={setReference}
               onImageUpload={handleImageUpload}
-              onReferenceImageUpload={handleReferenceImageUpload}
               onCaptureToggle={toggleCapture}
               isCapturing={isCapturing}
               isInCapturedMode={isInCapturedMode}
@@ -145,7 +132,6 @@ const ShootingStanceChecker = () => {
               capturedImages={capturedImages}
               onClearCapturedImages={clearCapturedImages}
               fileInputRef={fileInputRef}
-              referenceFileInputRef={referenceFileInputRef}
             />
           </div>
 
@@ -154,8 +140,9 @@ const ShootingStanceChecker = () => {
             <StatusDisplay
               status={status}
               rules={rules}
-              referenceStatus={referenceStatus}
               detectedPoseCategory={detectedPoseCategory}
+              multiPersonAnalysis={multiPersonAnalysis}
+              detectedPeople={detectedPeople}
             />
           </div>
         </div>
@@ -171,8 +158,6 @@ const ShootingStanceChecker = () => {
         onCameraReady={() => setStatus("Camera ready")}
         onError={setStatus}
       />
-
-      <PerformanceMonitor isVisible={showPerformanceMonitor} />
 
       {/* Footer */}
       <div className="bg-black/20 backdrop-blur-sm border-t border-gray-700 mt-12">

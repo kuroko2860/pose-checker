@@ -38,7 +38,7 @@ The Shooting Stance Checker has been refactored into smaller, more manageable co
 
 6. **StatusDisplay** (`StatusDisplay.jsx`)
 
-   - Displays status messages, rules feedback, and reference similarity
+   - Displays status messages, rules feedback
    - Handles color coding for different status types
    - Pure presentation component
 

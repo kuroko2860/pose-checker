@@ -5,9 +5,7 @@ import { t } from "../utils/translations";
 const ControlPanel = ({
   mode,
   onToggleMode,
-  onSetReference,
   onImageUpload,
-  onReferenceImageUpload,
   onCaptureToggle,
   isCapturing,
   isInCapturedMode,
@@ -19,7 +17,6 @@ const ControlPanel = ({
   capturedImages,
   onClearCapturedImages,
   fileInputRef,
-  referenceFileInputRef,
 }) => {
   return (
     <div className="flex flex-col items-center space-y-6 w-full max-w-2xl">
@@ -82,51 +79,6 @@ const ControlPanel = ({
           onClearCapturedImages={onClearCapturedImages}
         />
       )}
-
-      {/* Reference Pose Section */}
-      <div className="w-full bg-gray-800 rounded-xl p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-center mb-4 text-green-400">
-          {t("referencePoseSetup")}
-        </h3>
-
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          {/* Webcam Reference Button */}
-          <button
-            onClick={onSetReference}
-            disabled={mode === "image"}
-            className={`px-4 py-3 rounded-lg font-semibold transition-all duration-200 ${
-              mode === "image"
-                ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                : "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg btn-hover-effect"
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              <span>📹</span>
-              <span>{t("setReferenceFromWebcam")}</span>
-            </div>
-          </button>
-
-          {/* Image Reference Upload */}
-          <div className="relative">
-            <input
-              ref={referenceFileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={onReferenceImageUpload}
-              className="hidden"
-            />
-            <button
-              onClick={() => referenceFileInputRef.current?.click()}
-              className="px-4 py-3 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white rounded-lg font-semibold shadow-lg btn-hover-effect"
-            >
-              <div className="flex items-center space-x-2">
-                <span>🖼️</span>
-                <span>{t("uploadReferenceImage")}</span>
-              </div>
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* Image Upload Section */}
       {mode === "image" && (

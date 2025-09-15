@@ -33,6 +33,20 @@ const ImageDetailPopup = ({ image, isOpen, onClose }) => {
     return "bg-green-900/20 border-green-600";
   };
 
+  const getPersonColor = (personIndex) => {
+    const colors = [
+      "border-lime-400 bg-lime-400/10",
+      "border-red-400 bg-red-400/10",
+      "border-teal-400 bg-teal-400/10",
+      "border-blue-400 bg-blue-400/10",
+      "border-yellow-400 bg-yellow-400/10",
+      "border-orange-400 bg-orange-400/10",
+      "border-pink-400 bg-pink-400/10",
+      "border-purple-400 bg-purple-400/10",
+    ];
+    return colors[personIndex % colors.length];
+  };
+
   const handleBackdropClick = (event) => {
     if (event.target === event.currentTarget) {
       onClose();
@@ -69,34 +83,106 @@ const ImageDetailPopup = ({ image, isOpen, onClose }) => {
             />
           </div>
 
-          {/* Score and Pose Category */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div
-              className={`p-4 rounded-lg border ${getScoreBackground(
-                image.score
-              )}`}
-            >
+          {/* Multi-person Results or Single Score */}
+          {image.analysis && image.analysis.people ? (
+            // Multi-person results
+            <div className="space-y-4">
               <div className="text-center">
-                <div className="text-2xl font-bold mb-1">{t("score")}</div>
-                <div
-                  className={`text-4xl font-bold ${getScoreColor(image.score)}`}
-                >
-                  {image.score}%
+                <h3 className="text-xl font-bold text-white mb-2">
+                  {t("individualResults")}
+                </h3>
+                <div className="text-gray-400">
+                  {image.analysis.totalPeople} {t("peopleDetected")} -{" "}
+                  {t("averageScore")}: {image.analysis.averageScore}%
                 </div>
               </div>
-            </div>
 
-            <div className="p-4 rounded-lg border border-blue-600 bg-blue-900/20">
-              <div className="text-center">
-                <div className="text-2xl font-bold mb-1 text-blue-400">
-                  {t("pose")}
+              <div className="space-y-3">
+                {image.analysis.people.map((person, index) => (
+                  <div
+                    key={person.trackId || index}
+                    className={`p-4 rounded-lg border-l-4 ${getPersonColor(
+                      index
+                    )}`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+                        <div
+                          className={`w-3 h-3 rounded-full ${getPersonColor(
+                            index
+                          )
+                            .split(" ")[0]
+                            .replace("border-", "bg-")}`}
+                        ></div>
+                        <span className="font-semibold text-white">
+                          {t("person")} {index + 1}
+                        </span>
+                        <span className="text-gray-400 text-sm">
+                          (ID: {person.trackId})
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-400">
+                          {t("score")}:
+                        </span>
+                        <div
+                          className={`text-xl font-bold px-3 py-1 rounded-full ${getScoreColor(
+                            person.score
+                          )} bg-gray-700/50`}
+                        >
+                          {person.score}%
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-sm">
+                      <div
+                        className={`${
+                          person.score >= 70 ? "text-green-400" : "text-red-400"
+                        }`}
+                      >
+                        {person.status}
+                      </div>
+                      {person.rules && (
+                        <div className="mt-1 text-gray-400">{person.rules}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            // Single person results (legacy)
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div
+                className={`p-4 rounded-lg border ${getScoreBackground(
+                  image.score || image.averageScore
+                )}`}
+              >
+                <div className="text-center">
+                  <div className="text-2xl font-bold mb-1">{t("score")}</div>
+                  <div
+                    className={`text-4xl font-bold ${getScoreColor(
+                      image.score || image.averageScore
+                    )}`}
+                  >
+                    {image.score || image.averageScore}%
+                  </div>
                 </div>
-                <div className="text-2xl font-bold text-blue-300">
-                  {image.poseCategory || t("unknown")}
+              </div>
+
+              <div className="p-4 rounded-lg border border-blue-600 bg-blue-900/20">
+                <div className="text-center">
+                  <div className="text-2xl font-bold mb-1 text-blue-400">
+                    {t("pose")}
+                  </div>
+                  <div className="text-2xl font-bold text-blue-300">
+                    {image.poseCategory || t("unknown")}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Timestamp */}
           <div className="p-4 rounded-lg border border-gray-600 bg-gray-700/50">
