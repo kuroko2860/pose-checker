@@ -1,5 +1,5 @@
 import { io } from "socket.io-client";
-import API_CONFIG, { getApiUrl, getWsUrl, testData } from "../config/api.js";
+import API_CONFIG, { getApiUrl, getWsUrl } from "../config/api.js";
 import { convertToBinaryData, base64ToBinary } from "../utils/imageUtils.js";
 
 class PoseApiService {
@@ -83,7 +83,7 @@ class PoseApiService {
     try {
       // Convert to binary data using utility function
       const binaryData = await convertToBinaryData(imageData, 0.85);
-      
+
       // Send binary image data directly
       this.socket.emit("frame", binaryData);
       return true;
@@ -104,37 +104,37 @@ class PoseApiService {
 
       // Build form data with JPEG binary
       const formData = new FormData();
-      
+
       // Convert imageData to JPEG blob if needed
       let jpegBlob;
       if (imageData instanceof Blob) {
         jpegBlob = imageData;
       } else if (imageData instanceof ArrayBuffer) {
-        jpegBlob = new Blob([imageData], { type: 'image/jpeg' });
-      } else if (typeof imageData === 'string') {
+        jpegBlob = new Blob([imageData], { type: "image/jpeg" });
+      } else if (typeof imageData === "string") {
         // Base64 string - convert to blob
         const binaryString = atob(imageData);
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i);
         }
-        jpegBlob = new Blob([bytes], { type: 'image/jpeg' });
+        jpegBlob = new Blob([bytes], { type: "image/jpeg" });
       } else if (imageData instanceof HTMLImageElement) {
         // HTMLImageElement - convert to blob using canvas
-        const canvas = document.createElement('canvas');
+        const canvas = document.createElement("canvas");
         canvas.width = imageData.naturalWidth;
         canvas.height = imageData.naturalHeight;
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext("2d");
         ctx.drawImage(imageData, 0, 0);
-        
+
         // Convert canvas to blob
         jpegBlob = await new Promise((resolve) => {
-          canvas.toBlob(resolve, 'image/jpeg', 0.85);
+          canvas.toBlob(resolve, "image/jpeg", 0.85);
         });
       } else {
         throw new Error("Unsupported image data format");
       }
-      
+
       formData.append("file", jpegBlob, "image.jpg");
 
       const response = await fetch(
