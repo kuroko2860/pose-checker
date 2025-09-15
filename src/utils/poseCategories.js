@@ -17,14 +17,19 @@ const byName = (kps, name) =>
   null;
 
 // Helper function for graduated scoring based on distance from target range
-const calculateGraduatedScore = (value, minTarget, maxTarget, tolerance = 0) => {
+const calculateGraduatedScore = (
+  value,
+  minTarget,
+  maxTarget,
+  tolerance = 0
+) => {
   if (value === null || value === undefined) return 0;
-  
+
   // If within target range, return full score (1.0)
   if (value >= minTarget && value <= maxTarget) {
     return 1.0;
   }
-  
+
   // Calculate distance from target range
   let distanceFromRange;
   if (value < minTarget) {
@@ -32,18 +37,18 @@ const calculateGraduatedScore = (value, minTarget, maxTarget, tolerance = 0) => 
   } else {
     distanceFromRange = value - maxTarget;
   }
-  
+
   // Apply tolerance (if provided) to reduce penalty for small deviations
   const effectiveDistance = Math.max(0, distanceFromRange - tolerance);
-  
+
   // Calculate score based on distance (exponential decay)
   // Score decreases more rapidly as distance increases
   const maxPenalty = 1.0; // Maximum penalty (full score loss)
   const decayFactor = 0.1; // How quickly score decreases with distance
-  
+
   const penalty = Math.min(maxPenalty, effectiveDistance * decayFactor);
   const score = Math.max(0, 1.0 - penalty);
-  
+
   return score;
 };
 
@@ -220,13 +225,13 @@ export const classifyPose = (keypoints) => {
 
       // Alternative: both legs significantly bent (kneeling position)
       if (
-      leftKneeAngle < 120 &&
+        leftKneeAngle < 120 &&
         rightKneeAngle < 120 &&
         Math.abs(leftKneeAngle - rightKneeAngle) > 20
-    ) {
-      return POSE_CATEGORIES.KNEELING;
+      ) {
+        return POSE_CATEGORIES.KNEELING;
+      }
     }
-  }
   }
 
   // 2. Check for CHECKING_GUN pose (arms close together, gun pointed down)
@@ -348,87 +353,100 @@ export const POSE_RULES = {
       if (legAngle < 20) {
         // PARALLEL STANCE ANALYSIS
         // 1. Feet spacing: 0.8 -> 1.2 * shoulder spacing
-      total++;
-      if (LA && RA && LS && RS) {
-        const ankleW = distance3D(LA, RA);
-        const shoulderW = distance3D(LS, RS);
-        if (ankleW > 0 && shoulderW > 0) {
-          const minSpacing = shoulderW * 0.8;
-          const maxSpacing = shoulderW * 1.2;
-          const spacingScore = calculateGraduatedScore(ankleW, minSpacing, maxSpacing, shoulderW * 0.05);
-          score += spacingScore;
-          
-          if (spacingScore < 1.0) {
+        total++;
+        if (LA && RA && LS && RS) {
+          const ankleW = distance3D(LA, RA);
+          const shoulderW = distance3D(LS, RS);
+          if (ankleW > 0 && shoulderW > 0) {
+            const minSpacing = shoulderW * 0.8;
+            const maxSpacing = shoulderW * 1.2;
+            const spacingScore = calculateGraduatedScore(
+              ankleW,
+              minSpacing,
+              maxSpacing,
+              shoulderW * 0.05
+            );
+            score += spacingScore;
+
+            if (spacingScore < 1.0) {
+              issues.push(t("feetSpacingIncorrect"));
+            }
+          } else {
             issues.push(t("feetSpacingIncorrect"));
           }
-        } else {
-          issues.push(t("feetSpacingIncorrect"));
         }
-      }
 
         // 2. Each leg is straight (knee angle 160-180°)
-      total++;
-      if (LH && LK && LA) {
+        total++;
+        if (LH && LK && LA) {
           const leftKneeAng = angle3D(LH, LK, LA);
           const legScore = scoreAngle(leftKneeAng, 160, 180, 5);
           score += legScore;
-          
+
           if (legScore < 1.0) {
-            issues.push(t("leftLegNotStraight", {
-              angle: leftKneeAng?.toFixed(1) || "N/A"
-            }));
+            issues.push(
+              t("leftLegNotStraight", {
+                angle: leftKneeAng?.toFixed(1) || "N/A",
+              })
+            );
           }
         }
 
-      total++;
-      if (RH && RK && RA) {
+        total++;
+        if (RH && RK && RA) {
           const rightKneeAng = angle3D(RH, RK, RA);
           const legScore = scoreAngle(rightKneeAng, 160, 180, 5);
           score += legScore;
-          
+
           if (legScore < 1.0) {
-            issues.push(t("rightLegNotStraight", {
-              angle: rightKneeAng?.toFixed(1) || "N/A"
-            }));
+            issues.push(
+              t("rightLegNotStraight", {
+                angle: rightKneeAng?.toFixed(1) || "N/A",
+              })
+            );
           }
         }
 
         // 3. Body forward lean (torso angle < 170°)
-      total++;
-      if (LS && LH && LK) {
-        const torso = angle3D(LS, LH, LK);
+        total++;
+        if (LS && LH && LK) {
+          const torso = angle3D(LS, LH, LK);
           const torsoScore = calculateGraduatedScore(torso, 0, 170, 5);
           score += torsoScore;
-          
+
           if (torsoScore < 1.0) {
             issues.push(t("torsoTooUpright"));
           }
         }
 
         // 4. Both arms holding gun are straight (elbow angle 150-180°)
-      total++;
-      if (LS && LE && LW) {
+        total++;
+        if (LS && LE && LW) {
           const leftArmAng = angle3D(LS, LE, LW);
           const armScore = scoreAngle(leftArmAng, 150, 180, 5);
           score += armScore;
-          
+
           if (armScore < 1.0) {
-            issues.push(t("leftArmNotStraight", {
-              angle: leftArmAng?.toFixed(1) || "N/A"
-            }));
+            issues.push(
+              t("leftArmNotStraight", {
+                angle: leftArmAng?.toFixed(1) || "N/A",
+              })
+            );
           }
         }
 
-      total++;
-      if (RS && RE && RW) {
+        total++;
+        if (RS && RE && RW) {
           const rightArmAng = angle3D(RS, RE, RW);
           const armScore = scoreAngle(rightArmAng, 150, 180, 5);
           score += armScore;
-          
+
           if (armScore < 1.0) {
-            issues.push(t("rightArmNotStraight", {
-              angle: rightArmAng?.toFixed(1) || "N/A"
-            }));
+            issues.push(
+              t("rightArmNotStraight", {
+                angle: rightArmAng?.toFixed(1) || "N/A",
+              })
+            );
           }
         }
 
@@ -438,7 +456,7 @@ export const POSE_RULES = {
           const leftArmBodyAng = angle3D(LH, LS, LE);
           const armBodyScore = scoreAngle(leftArmBodyAng, 80, 100, 5);
           score += armBodyScore;
-          
+
           if (armBodyScore < 1.0) {
             issues.push(
               t("leftArmBodyAngleIncorrect", {
@@ -453,7 +471,7 @@ export const POSE_RULES = {
           const rightArmBodyAng = angle3D(RH, RS, RE);
           const armBodyScore = scoreAngle(rightArmBodyAng, 80, 100, 5);
           score += armBodyScore;
-          
+
           if (armBodyScore < 1.0) {
             issues.push(
               t("rightArmBodyAngleIncorrect", {
@@ -470,11 +488,13 @@ export const POSE_RULES = {
           const leftKneeAng = angle3D(LH, LK, LA);
           const legScore = scoreAngle(leftKneeAng, 160, 180, 5);
           score += legScore;
-          
+
           if (legScore < 1.0) {
-            issues.push(t("leftLegNotStraight", {
-              angle: leftKneeAng?.toFixed(1) || "N/A"
-            }));
+            issues.push(
+              t("leftLegNotStraight", {
+                angle: leftKneeAng?.toFixed(1) || "N/A",
+              })
+            );
           }
         }
 
@@ -483,11 +503,13 @@ export const POSE_RULES = {
           const rightKneeAng = angle3D(RH, RK, RA);
           const legScore = scoreAngle(rightKneeAng, 160, 180, 5);
           score += legScore;
-          
+
           if (legScore < 1.0) {
-            issues.push(t("rightLegNotStraight", {
-              angle: rightKneeAng?.toFixed(1) || "N/A"
-            }));
+            issues.push(
+              t("rightLegNotStraight", {
+                angle: rightKneeAng?.toFixed(1) || "N/A",
+              })
+            );
           }
         }
 
@@ -497,11 +519,13 @@ export const POSE_RULES = {
           const legAngle = calculateLegAngle(LH, LK, LA, RH, RK, RA);
           const legAngleScore = scoreAngle(legAngle, 30, 50, 3);
           score += legAngleScore;
-          
+
           if (legAngleScore < 1.0) {
-            issues.push(t("legAngleIncorrect", {
-              angle: legAngle?.toFixed(1) || "N/A"
-            }));
+            issues.push(
+              t("legAngleIncorrect", {
+                angle: legAngle?.toFixed(1) || "N/A",
+              })
+            );
           }
         }
 
@@ -511,11 +535,13 @@ export const POSE_RULES = {
           const gunArmAng = angle3D(RS, RE, RW);
           const gunArmScore = scoreAngle(gunArmAng, 160, 180, 5);
           score += gunArmScore;
-          
+
           if (gunArmScore < 1.0) {
-            issues.push(t("gunArmNotStraight", {
-              angle: gunArmAng?.toFixed(1) || "N/A"
-            }));
+            issues.push(
+              t("gunArmNotStraight", {
+                angle: gunArmAng?.toFixed(1) || "N/A",
+              })
+            );
           }
         }
 
@@ -524,7 +550,7 @@ export const POSE_RULES = {
           const gunArmBodyAng = angle3D(RH, RS, RE);
           const gunArmBodyScore = scoreAngle(gunArmBodyAng, 80, 100, 5);
           score += gunArmBodyScore;
-          
+
           if (gunArmBodyScore < 1.0) {
             issues.push(
               t("gunArmBodyAngleIncorrect", {
@@ -535,12 +561,12 @@ export const POSE_RULES = {
         }
 
         // 5. Support arm: angle at shoulder with body 30-50°, angle at wrist 70-120°
-      total++;
-      if (LH && LS && LE) {
+        total++;
+        if (LH && LS && LE) {
           const supportArmBodyAng = angle3D(LH, LS, LE);
           const supportArmBodyScore = scoreAngle(supportArmBodyAng, 30, 50, 3);
           score += supportArmBodyScore;
-          
+
           if (supportArmBodyScore < 1.0) {
             issues.push(
               t("supportArmBodyAngleIncorrect", {
@@ -553,9 +579,14 @@ export const POSE_RULES = {
         total++;
         if (LS && LE && LW) {
           const supportArmWristAng = angle3D(LS, LE, LW);
-          const supportArmWristScore = scoreAngle(supportArmWristAng, 70, 120, 5);
+          const supportArmWristScore = scoreAngle(
+            supportArmWristAng,
+            70,
+            120,
+            5
+          );
           score += supportArmWristScore;
-          
+
           if (supportArmWristScore < 1.0) {
             issues.push(
               t("supportArmWristAngleIncorrect", {
@@ -598,9 +629,14 @@ export const POSE_RULES = {
         if (ankleW > 0 && shoulderW > 0) {
           const minSpacing = shoulderW * 0.9;
           const maxSpacing = shoulderW * 1.3;
-          const spacingScore = calculateGraduatedScore(ankleW, minSpacing, maxSpacing, shoulderW * 0.05);
+          const spacingScore = calculateGraduatedScore(
+            ankleW,
+            minSpacing,
+            maxSpacing,
+            shoulderW * 0.05
+          );
           score += spacingScore;
-          
+
           if (spacingScore < 1.0) {
             issues.push(t("feetSpacingWider"));
           }
@@ -634,7 +670,8 @@ export const POSE_RULES = {
         const a = angle3D(RS, RE, RW);
         const armScore = scoreAngle(a, 160, 180, 5);
         score += armScore;
-        if (armScore < 1.0) issues.push(t("extendedArmNotStraight", { angle: a.toFixed(1) }));
+        if (armScore < 1.0)
+          issues.push(t("extendedArmNotStraight", { angle: a.toFixed(1) }));
       } else issues.push(t("frontArmNotVisible"));
 
       // Arm angle with body
@@ -643,7 +680,8 @@ export const POSE_RULES = {
         const a = angle3D(RE, RS, RH);
         const armBodyScore = scoreAngle(a, 80, 110, 5);
         score += armBodyScore;
-        if (armBodyScore < 1.0) issues.push(t("armAngleIncorrect", { angle: a.toFixed(1) }));
+        if (armBodyScore < 1.0)
+          issues.push(t("armAngleIncorrect", { angle: a.toFixed(1) }));
       } else issues.push(t("frontArmNotVisible"));
 
       // Support arm position
@@ -666,7 +704,6 @@ export const POSE_RULES = {
     name: t("kneeling"),
     description: t("kneelingDesc"),
     rules: (keypoints) => {
-      console.log("kps", keypoints);
       const issues = [];
       let score = 0;
       let total = 0;
@@ -710,17 +747,25 @@ export const POSE_RULES = {
       total++;
       if (supportLeg === "left" && LH && LK && LA) {
         const supportKneeAng = angle3D(LH, LK, LA);
-        console.log("sp legs", supportKneeAng);
         // Support leg should be very bent (knee on ground, butt on heel)
-        const supportLegScore = calculateGraduatedScore(supportKneeAng, 0, 60, 5);
+        const supportLegScore = calculateGraduatedScore(
+          supportKneeAng,
+          0,
+          60,
+          5
+        );
         score += supportLegScore;
         if (supportLegScore < 1.0) {
           issues.push(t("supportLegNotProperlyPositioned"));
         }
       } else if (supportLeg === "right" && RH && RK && RA) {
         const supportKneeAng = angle3D(RH, RK, RA);
-        console.log("sp legs", supportKneeAng);
-        const supportLegScore = calculateGraduatedScore(supportKneeAng, 0, 60, 5);
+        const supportLegScore = calculateGraduatedScore(
+          supportKneeAng,
+          0,
+          60,
+          5
+        );
         score += supportLegScore;
         if (supportLegScore < 1.0) {
           issues.push(t("supportLegNotProperlyPositioned"));
@@ -731,23 +776,25 @@ export const POSE_RULES = {
       total++;
       if (supportLeg === "left" && RH && RK && RA) {
         const otherKneeAng = angle3D(RH, RK, RA);
-        console.log("otherleg", otherKneeAng);
         const otherLegScore = scoreAngle(otherKneeAng, 40, 70, 3);
         score += otherLegScore;
         if (otherLegScore < 1.0) {
-          issues.push(t("otherLegKneeAngleIncorrect", {
-            angle: otherKneeAng?.toFixed(1) || "N/A"
-          }));
+          issues.push(
+            t("otherLegKneeAngleIncorrect", {
+              angle: otherKneeAng?.toFixed(1) || "N/A",
+            })
+          );
         }
       } else if (supportLeg === "right" && LH && LK && LA) {
         const otherKneeAng = angle3D(LH, LK, LA);
-        console.log("otherleg", otherKneeAng);
         const otherLegScore = scoreAngle(otherKneeAng, 40, 70, 3);
         score += otherLegScore;
         if (otherLegScore < 1.0) {
-          issues.push(t("otherLegKneeAngleIncorrect", {
-            angle: otherKneeAng?.toFixed(1) || "N/A"
-          }));
+          issues.push(
+            t("otherLegKneeAngleIncorrect", {
+              angle: otherKneeAng?.toFixed(1) || "N/A",
+            })
+          );
         }
       }
 
@@ -760,23 +807,25 @@ export const POSE_RULES = {
       total++;
       if (gunArm === "left" && LS && LE && LW) {
         const gunArmAng = angle3D(LS, LE, LW);
-        console.log("gun arm", gunArmAng);
         const gunArmScore = scoreAngle(gunArmAng, 150, 180, 5);
         score += gunArmScore;
         if (gunArmScore < 1.0) {
-          issues.push(t("gunArmNotStraight", {
-            angle: gunArmAng?.toFixed(1) || "N/A"
-          }));
+          issues.push(
+            t("gunArmNotStraight", {
+              angle: gunArmAng?.toFixed(1) || "N/A",
+            })
+          );
         }
       } else if (gunArm === "right" && RS && RE && RW) {
         const gunArmAng = angle3D(RS, RE, RW);
-        console.log("gun arm", gunArmAng);
         const gunArmScore = scoreAngle(gunArmAng, 150, 180, 5);
         score += gunArmScore;
         if (gunArmScore < 1.0) {
-          issues.push(t("gunArmNotStraight", {
-            angle: gunArmAng?.toFixed(1) || "N/A"
-          }));
+          issues.push(
+            t("gunArmNotStraight", {
+              angle: gunArmAng?.toFixed(1) || "N/A",
+            })
+          );
         }
       }
 
@@ -860,7 +909,8 @@ export const POSE_RULES = {
         const a = angle3D(RE, RS, RH);
         const armBodyScore = scoreAngle(a, 20, 50, 3);
         score += armBodyScore;
-        if (armBodyScore < 1.0) issues.push(t("armAngleIncorrect", { angle: a.toFixed(1) }));
+        if (armBodyScore < 1.0)
+          issues.push(t("armAngleIncorrect", { angle: a.toFixed(1) }));
       } else issues.push(t("frontArmNotVisible"));
 
       total++;
@@ -877,9 +927,11 @@ export const POSE_RULES = {
         const leftLegScore = scoreAngle(leftKneeAng, 150, 180, 5);
         score += leftLegScore;
         if (leftLegScore < 1.0) {
-          issues.push(t("leftLegNotStraight", {
-            angle: leftKneeAng?.toFixed(1) || "N/A"
-          }));
+          issues.push(
+            t("leftLegNotStraight", {
+              angle: leftKneeAng?.toFixed(1) || "N/A",
+            })
+          );
         }
       }
 
@@ -889,9 +941,11 @@ export const POSE_RULES = {
         const rightLegScore = scoreAngle(rightKneeAng, 150, 180, 5);
         score += rightLegScore;
         if (rightLegScore < 1.0) {
-          issues.push(t("rightLegNotStraight", {
-            angle: rightKneeAng?.toFixed(1) || "N/A"
-          }));
+          issues.push(
+            t("rightLegNotStraight", {
+              angle: rightKneeAng?.toFixed(1) || "N/A",
+            })
+          );
         }
       }
 
