@@ -51,14 +51,18 @@ export class CaptureFilter {
 
   // Pose selection filter: only capture if a specific pose is selected
   passesPoseSelectionFilter(currentClassification) {
-    return currentClassification !== null && currentClassification !== POSE_CATEGORIES.UNKNOWN;
+    return (
+      currentClassification !== null &&
+      currentClassification !== POSE_CATEGORIES.UNKNOWN
+    );
   }
-
- 
 
   // Error trigger: only capture if rule score is below threshold
   passesErrorTrigger(ruleScore) {
-    return ruleScore > CAPTURE_CONFIG.MIN_ERROR_THRESHOLD && ruleScore < CAPTURE_CONFIG.MAX_ERROR_THRESHOLD;
+    return (
+      ruleScore > CAPTURE_CONFIG.MIN_ERROR_THRESHOLD &&
+      ruleScore < CAPTURE_CONFIG.MAX_ERROR_THRESHOLD
+    );
   }
 
   // Cooldown filter: avoid capturing too frequently (1 second)
@@ -80,12 +84,14 @@ export class CaptureFilter {
     this.capturedBadPoses.push({
       ...poseData,
       timestamp: Date.now(),
-      frame: this.currentFrame
+      frame: this.currentFrame,
     });
 
     // Keep only the last MAX_BAD_POSES
     if (this.capturedBadPoses.length > CAPTURE_CONFIG.MAX_BAD_POSES) {
-      this.capturedBadPoses = this.capturedBadPoses.slice(-CAPTURE_CONFIG.MAX_BAD_POSES);
+      this.capturedBadPoses = this.capturedBadPoses.slice(
+        -CAPTURE_CONFIG.MAX_BAD_POSES
+      );
     }
   }
 
