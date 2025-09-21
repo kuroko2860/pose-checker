@@ -776,43 +776,51 @@ export const POSE_RULES = {
        const LA = byName(keypoints, "left_ankle");       // 15
        const RA = byName(keypoints, "right_ankle");      // 16
 
-       // 1. Check if person is facing camera (shoulders visible)
-       total++;
-       if (LS && RS) {
-         const shoulderDistance = Math.abs(LS.x - RS.x);
-         if (shoulderDistance > 50) { // Shoulders should be visible
-           score += 1.0;
-         } else {
-           issues.push("Quay mặt về phía camera - vai không nhìn thấy");
-         }
-       } else {
-         issues.push("Không phát hiện được vai");
-       }
+      //  // 1. Check if person is facing camera (shoulders visible)
+      //  total++;
+      //  if (LS && RS) {
+      //    const shoulderDistance = Math.abs(LS.x - RS.x);
+      //    if (shoulderDistance > 50) { // Shoulders should be visible
+      //      score += 1.0;
+      //    } else {
+      //      issues.push("Quay mặt về phía camera - vai không nhìn thấy");
+      //    }
+      //  } else {
+      //    issues.push("Không phát hiện được vai");
+      //  }
 
-       // 2. Check both legs are straight (knee angles 160-180°)
-       total++;
-       if (LH && LK && LA) {
-         const leftKneeAngle = angleAt(LK, LH, LA);
-         if (leftKneeAngle && leftKneeAngle >= 160 && leftKneeAngle <= 180) {
-           score += 1; // Half point for left leg
-         } else {
-           issues.push(`Chân trái không thẳng: ${leftKneeAngle?.toFixed(1) || 'N/A'}° (cần 160-180°)`);
-         }
-       } else {
-         issues.push("Chân trái không nhìn thấy đầy đủ");
-       }
+       // FRONT-BACK STANCE ANALYSIS
+        // 1. Each leg is straight (knee angle 160-180°)
+        total++;
+        if (LH && LK && LA) {
+          const leftKneeAng = angle3D(LH, LK, LA);
+          const legScore = scoreAngle(leftKneeAng, 160, 180, 5);
+          score += legScore;
 
-       total++;
-       if (RH && RK && RA) {
-         const rightKneeAngle = angleAt(RK, RH, RA);
-         if (rightKneeAngle && rightKneeAngle >= 160 && rightKneeAngle <= 180) {
-           score += 1; // Half point for right leg
-         } else {
-           issues.push(`Chân phải không thẳng: ${rightKneeAngle?.toFixed(1) || 'N/A'}° (cần 160-180°)`);
-         }
-       } else {
-         issues.push("Chân phải không nhìn thấy đầy đủ");
-       }
+          if (legScore < 1.0) {
+            issues.push(
+              t("leftLegNotStraight", {
+                angle: leftKneeAng?.toFixed(1) || "N/A",
+              })
+            );
+          }
+        }
+
+        total++;
+        if (RH && RK && RA) {
+          const rightKneeAng = angle3D(RH, RK, RA);
+          const legScore = scoreAngle(rightKneeAng, 160, 180, 5);
+          score += legScore;
+
+          if (legScore < 1.0) {
+            issues.push(
+              t("rightLegNotStraight", {
+                angle: rightKneeAng?.toFixed(1) || "N/A",
+              })
+            );
+          }
+        }
+
 
        total++;
         if (LA && RA && LS && RS) {
@@ -841,54 +849,49 @@ export const POSE_RULES = {
        total++;
        if (LW && RW && LH && RH && LS && RS) {
          const handHeight = (LW.y + RW.y) / 2;
-         const hipHeight = (LH.y + RH.y) / 2;
          const shoulderHeight = (LS.y + RS.y) / 2;
-         const heightDiffFromHip = handHeight - hipHeight;
          const heightDiffFromShoulder = handHeight - shoulderHeight;
          
          // Check if both wrists are close together (within 100 pixels)
          const wristDistance = Math.sqrt((LW.x - RW.x) ** 2 + (LW.y - RW.y) ** 2);
          const wristsClose = wristDistance < 100;
          
-         // Pose 1: Hands near hip level (gun assembly at waist)
-         const isHipLevel = heightDiffFromHip > -50 && heightDiffFromHip < 100;
-         
          // Pose 2: Hands lifted in front of chest (gun assembly at chest level)
-         const isChestLevel = heightDiffFromShoulder > -100 && heightDiffFromShoulder < 50;
+         const isChestLevel = heightDiffFromShoulder > -100 && heightDiffFromShoulder < 0;
          
-         if ((isHipLevel || isChestLevel) && wristsClose) {
+         if ( isChestLevel && wristsClose) {
            score += 1.0;
-           if (isHipLevel) {
              // Additional check for hip-level pose: arms should be more bent
              if (RS && RE && RW) {
                const rightArmAngle = angleAt(RE, RS, RW);
                if (rightArmAngle && rightArmAngle >= 60 && rightArmAngle <= 120) {
                  // Good arm positioning for hip-level assembly
                } else {
-                 issues.push(`Để lắp ráp ở hông, gập tay nhiều hơn: ${rightArmAngle?.toFixed(1) || 'N/A'}° (cần 60-120°)`);
+                 issues.push(`Để lắp ráp ở ngực, gập tay nhiều hơn: ${rightArmAngle?.toFixed(1) || 'N/A'}° (cần 60-120°)`);
                }
-             }
-           } else if (isChestLevel) {
-             // Additional check for chest-level pose: arms should be more extended
-             if (RS && RE && RW) {
-               const rightArmAngle = angleAt(RE, RS, RW);
-               if (rightArmAngle && rightArmAngle >= 120 && rightArmAngle <= 160) {
-                 // Good arm positioning for chest-level assembly
-               } else {
-                 issues.push(`Để lắp ráp ở ngực, duỗi tay nhiều hơn: ${rightArmAngle?.toFixed(1) || 'N/A'}° (cần 120-160°)`);
-               }
-             }
            }
          } else {
            if (!wristsClose) {
              issues.push("Hai cổ tay cần gần nhau hơn để lắp ráp súng");
            }
-           if (!isHipLevel && !isChestLevel) {
-             issues.push("Tay nên ở mức hông (lắp ráp ở eo) hoặc nâng lên ngực");
+           if (!isChestLevel) {
+             issues.push("Tay nên ở trước ngực");
            }
          }
        } else {
-         issues.push("Không phát hiện được tay, hông hoặc vai");
+         issues.push("Không phát hiện được tay, vai");
+       }
+
+       // Check if distance between elbows is smaller the distance between shoulders
+       total++;
+       if (LE && RE && LS && RS) {
+         const shoulderDist = Math.sqrt((LS.x - RS.x) ** 2 + (LS.y - RS.y) ** 2);
+         const elbowDist = Math.sqrt((LE.x - RE.x) ** 2 + (LE.y - RE.y) ** 2);
+         if (elbowDist > 0.8 * shoulderDist) {
+           issues.push("Hai khuỷu tay nên gần nhau hơn");
+         }else{
+          score+=1.0;
+         }
        }
 
        // 4. Check body alignment (shoulders and hips aligned)
