@@ -37,6 +37,12 @@ const PoseSelector = ({
       description: t("checkingGunDesc"),
       icon: "🔍",
     },
+    {
+      key: POSE_CATEGORIES.GUN_ASSEMBLING,
+      name: t("gunAssembling"),
+      description: t("gunAssemblingDesc"),
+      icon: "🔍",
+    },
   ];
 
   const getDetectedPoseInfo = () => {
