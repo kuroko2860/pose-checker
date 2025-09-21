@@ -8,6 +8,7 @@ export const POSE_CATEGORIES = {
   ONE_HAND_STANDING: "one_hand_standing",
   KNEELING: "kneeling",
   CHECKING_GUN: "checking_gun",
+  GUN_ASSEMBLING: "gun_assembling",
   UNKNOWN: "unknown",
 };
 
@@ -124,205 +125,6 @@ const calculateLegAngle = (
 
 // Pose classification logic
 export const classifyPose = (keypoints) => {
-  return POSE_CATEGORIES.UNKNOWN;
-  const LS = byName(keypoints, "left_shoulder");
-  const RS = byName(keypoints, "right_shoulder");
-  const LH = byName(keypoints, "left_hip");
-  const RH = byName(keypoints, "right_hip");
-  const LK = byName(keypoints, "left_knee");
-  const RK = byName(keypoints, "right_knee");
-  const LA = byName(keypoints, "left_ankle");
-  const RA = byName(keypoints, "right_ankle");
-  const LE = byName(keypoints, "left_elbow");
-  const RE = byName(keypoints, "right_elbow");
-  const LW = byName(keypoints, "left_wrist");
-  const RW = byName(keypoints, "right_wrist");
-  const LEar = byName(keypoints, "left_ear");
-  const REar = byName(keypoints, "right_ear");
-
-  // Check if we have enough keypoints
-  const visibleKeypoints = keypoints.filter(
-    (k) => k.score > POSE_CONFIG.CONFIDENT_SCORE
-  ).length;
-  if (visibleKeypoints < 12) return POSE_CATEGORIES.UNKNOWN;
-
-  // Helper function to determine support leg for kneeling
-  const determineSupportLeg = () => {
-    if (!LH || !RH || !LK || !RK || !LA || !RA) return null;
-
-    const leftKneeAng = angle3D(LH, LK, LA);
-    const rightKneeAng = angle3D(RH, RK, RA);
-    const leftHipKneeDist = distance3D(LH, LK);
-    const rightHipKneeDist = distance3D(RH, RK);
-    const leftKneeAnkleDist = distance3D(LK, LA);
-    const rightKneeAnkleDist = distance3D(RK, RA);
-
-    let leftScore = 0;
-    let rightScore = 0;
-
-    if (leftKneeAng !== null && rightKneeAng !== null) {
-      if (leftKneeAng < rightKneeAng) leftScore++;
-      else rightScore++;
-    }
-
-    if (leftHipKneeDist < rightHipKneeDist) leftScore++;
-    else rightScore++;
-
-    if (leftKneeAnkleDist < rightKneeAnkleDist) leftScore++;
-    else rightScore++;
-
-    return leftScore > rightScore ? "left" : "right";
-  };
-
-  // Helper function to analyze leg positioning
-  const analyzeLegPositioning = (leftAnkle, rightAnkle) => {
-    if (!leftAnkle || !rightAnkle) {
-      return { type: "unknown", confidence: 0 };
-    }
-    const ankleLineAngle =
-      Math.atan2(rightAnkle.z - leftAnkle.z, rightAnkle.x - leftAnkle.x) *
-      (180 / Math.PI);
-    const ankleLineAngleAbs = Math.abs(ankleLineAngle);
-    let stanceType = "unknown";
-    let confidence = 0;
-    if (ankleLineAngleAbs < 30) {
-      stanceType = "parallel";
-      confidence = Math.max(0, 1 - ankleLineAngleAbs / 30);
-    } else if (ankleLineAngleAbs > 60) {
-      stanceType = "front_back";
-      confidence = Math.min(1, (ankleLineAngleAbs - 60) / 30);
-    } else {
-      stanceType = "neutral";
-      confidence = 0.5;
-    }
-    return {
-      type: stanceType,
-      confidence: confidence,
-      ankleLineAngle: ankleLineAngle,
-      ankleLineAngleAbs: ankleLineAngleAbs,
-    };
-  };
-
-  // 1. Check for KNEELING pose (highest priority - most distinctive)
-  if (LH && RH && LK && RK && LA && RA) {
-    const leftKneeAngle = angle3D(LH, LK, LA);
-    const rightKneeAngle = angle3D(RH, RK, RA);
-
-    // At least one leg should be significantly bent (kneeling characteristic)
-    if (leftKneeAngle !== null && rightKneeAngle !== null) {
-      const minKneeAngle = Math.min(leftKneeAngle, rightKneeAngle);
-      const maxKneeAngle = Math.max(leftKneeAngle, rightKneeAngle);
-
-      // Support leg should be very bent (30-60°), other leg moderately bent (40-50°)
-      if (
-        minKneeAngle >= 30 &&
-        minKneeAngle <= 60 &&
-        maxKneeAngle >= 40 &&
-        maxKneeAngle <= 50
-      ) {
-        return POSE_CATEGORIES.KNEELING;
-      }
-
-      // Alternative: both legs significantly bent (kneeling position)
-      if (
-        leftKneeAngle < 120 &&
-        rightKneeAngle < 120 &&
-        Math.abs(leftKneeAngle - rightKneeAngle) > 20
-      ) {
-        return POSE_CATEGORIES.KNEELING;
-      }
-    }
-  }
-
-  // 2. Check for CHECKING_GUN pose (arms close together, gun pointed down)
-  if (LS && RS && LE && RE && LW && RW) {
-    const leftArmAngle = angle3D(LS, LE, LW);
-    const rightArmAngle = angle3D(RS, RE, RW);
-    const handDistance = distance3D(LW, RW);
-    const shoulderDistance = distance3D(LS, RS);
-
-    // Arms should be close together (hands closer than shoulders)
-    const armsClose = handDistance < shoulderDistance * 0.7;
-
-    // At least one arm should be bent (checking gun position)
-    const leftArmBent =
-      leftArmAngle !== null && leftArmAngle >= 40 && leftArmAngle <= 90;
-    const rightArmBent =
-      rightArmAngle !== null && rightArmAngle >= 40 && rightArmAngle <= 90;
-
-    // Gun should be pointed down (wrists below shoulders)
-    const gunPointedDown = LW.y > LS.y && RW.y > RS.y;
-
-    if (armsClose && (leftArmBent || rightArmBent) && gunPointedDown) {
-      return POSE_CATEGORIES.CHECKING_GUN;
-    }
-  }
-
-  // 3. Check for ONE_HAND_STANDING pose (one arm extended, other close to body)
-  if (LS && RS && LE && RE && LW && RW) {
-    const leftArmAngle = angle3D(LS, LE, LW);
-    const rightArmAngle = angle3D(RS, RE, RW);
-    const handDistance = distance3D(LW, RW);
-    const shoulderDistance = distance3D(LS, RS);
-
-    // One arm extended (170-180°), other arm bent (60-135°)
-    const leftExtended =
-      leftArmAngle !== null && leftArmAngle >= 170 && leftArmAngle <= 180;
-    const rightExtended =
-      rightArmAngle !== null && rightArmAngle >= 170 && rightArmAngle <= 180;
-    const leftBent =
-      leftArmAngle !== null && leftArmAngle >= 60 && leftArmAngle <= 135;
-    const rightBent =
-      rightArmAngle !== null && rightArmAngle >= 60 && rightArmAngle <= 135;
-
-    // Hands should be far apart (one-handed stance)
-    const handsFarApart = handDistance > shoulderDistance * 0.8;
-
-    if (
-      handsFarApart &&
-      ((leftExtended && rightBent) || (rightExtended && leftBent))
-    ) {
-      return POSE_CATEGORIES.ONE_HAND_STANDING;
-    }
-  }
-
-  // 4. Check for TWO_HAND_STANDING pose (both arms extended, hands close)
-  if (LS && RS && LE && RE && LW && RW && LH && RH && LK && RK && LA && RA) {
-    const leftArmAngle = angle3D(LS, LE, LW);
-    const rightArmAngle = angle3D(RS, RE, RW);
-    const handDistance = distance3D(LW, RW);
-    const shoulderDistance = distance3D(LS, RS);
-
-    // Both arms should be extended (170-180°)
-    const bothArmsExtended =
-      leftArmAngle !== null &&
-      rightArmAngle !== null &&
-      leftArmAngle >= 170 &&
-      leftArmAngle <= 180 &&
-      rightArmAngle >= 170 &&
-      rightArmAngle <= 180;
-
-    // Hands should be close together (two-handed stance)
-    const handsClose = handDistance < shoulderDistance * 0.6;
-
-    // Legs should be in standing position (not kneeling)
-    const leftKneeAngle = angle3D(LH, LK, LA);
-    const rightKneeAngle = angle3D(RH, RK, RA);
-    const legsStanding =
-      leftKneeAngle !== null &&
-      rightKneeAngle !== null &&
-      leftKneeAngle > 120 &&
-      rightKneeAngle > 120;
-
-    // Analyze leg positioning for stance type
-    const legAnalysis = analyzeLegPositioning(LA, RA);
-
-    if (bothArmsExtended && handsClose && legsStanding) {
-      return POSE_CATEGORIES.TWO_HAND_STANDING;
-    }
-  }
-
-  // 5. Default to UNKNOWN if no clear classification
   return POSE_CATEGORIES.UNKNOWN;
 };
 
@@ -888,6 +690,73 @@ export const POSE_RULES = {
   [POSE_CATEGORIES.CHECKING_GUN]: {
     name: t("checkingGun"),
     description: t("checkingGunDesc"),
+    rules: (keypoints) => {
+      const issues = [];
+      let score = 0;
+      let total = 0;
+
+      const RS = byName(keypoints, "right_shoulder");
+      const RE = byName(keypoints, "right_elbow");
+      const RW = byName(keypoints, "right_wrist");
+      const RH = byName(keypoints, "left_hip");
+      const LH = byName(keypoints, "right_hip");
+      const LK = byName(keypoints, "left_knee");
+      const RK = byName(keypoints, "right_knee");
+      const LA = byName(keypoints, "left_ankle");
+      const RA = byName(keypoints, "right_ankle");
+
+      // Arm angle with body
+      total++;
+      if (RS && RE && RH) {
+        const a = angle3D(RE, RS, RH);
+        const armBodyScore = scoreAngle(a, 20, 50, 3);
+        score += armBodyScore;
+        if (armBodyScore < 1.0)
+          issues.push(t("armAngleIncorrect", { angle: a.toFixed(1) }));
+      } else issues.push(t("frontArmNotVisible"));
+
+      total++;
+      if (RS && RE && RW) {
+        const a = angle3D(RS, RE, RW);
+        const elbowScore = scoreAngle(a, 80, 110, 5);
+        score += elbowScore;
+        if (elbowScore < 1.0) issues.push(t("rightElbowNotBentEnough"));
+      } else issues.push(t("rearArmNotVisible"));
+
+      total++;
+      if (LH && LK && LA) {
+        const leftKneeAng = angle3D(LH, LK, LA);
+        const leftLegScore = scoreAngle(leftKneeAng, 150, 180, 5);
+        score += leftLegScore;
+        if (leftLegScore < 1.0) {
+          issues.push(
+            t("leftLegNotStraight", {
+              angle: leftKneeAng?.toFixed(1) || "N/A",
+            })
+          );
+        }
+      }
+
+      total++;
+      if (RH && RK && RA) {
+        const rightKneeAng = angle3D(RH, RK, RA);
+        const rightLegScore = scoreAngle(rightKneeAng, 150, 180, 5);
+        score += rightLegScore;
+        if (rightLegScore < 1.0) {
+          issues.push(
+            t("rightLegNotStraight", {
+              angle: rightKneeAng?.toFixed(1) || "N/A",
+            })
+          );
+        }
+      }
+
+      return { issues, score, total };
+    },
+  },
+  [POSE_CATEGORIES.GUN_ASSEMBLING]: {
+    name: t("gunAssembling"),
+    description: t("gunAssemblingDesc"),
     rules: (keypoints) => {
       const issues = [];
       let score = 0;

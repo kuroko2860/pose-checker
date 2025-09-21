@@ -73,6 +73,8 @@ const i18n = {
     kneelingDesc: "Low-profile kneeling position",
     checkingGun: "Checking Gun",
     checkingGunDesc: "Safety check position",
+    gunAssembling: "Assembling Gun",
+    gunAssemblingDesc: "Safety assembling gun",
 
     // Pose Selector
     poseTypeSelection: "🎯 Pose Type Selection",
@@ -145,24 +147,35 @@ const i18n = {
     poseNotRecognized: "Pose not recognized",
     feetSpacingIncorrect: "Feet spacing incorrect (aim ~ shoulder width)",
     feetNotParallel: "Feet should be parallel (side-by-side), not front-back",
-    frontBackStanceIncorrect: "Front-back stance: feet too close or too far apart",
-    frontBackKneeBendIncorrect: "Front-back stance: front leg should be more bent, back leg straighter",
-    legAngleIncorrect: "Leg angle incorrect for stance type (current: {angle}°)",
+    frontBackStanceIncorrect:
+      "Front-back stance: feet too close or too far apart",
+    frontBackKneeBendIncorrect:
+      "Front-back stance: front leg should be more bent, back leg straighter",
+    legAngleIncorrect:
+      "Leg angle incorrect for stance type (current: {angle}°)",
     leftLegNotStraight: "Left leg not straight enough (current: {angle}°)",
     rightLegNotStraight: "Right leg not straight enough (current: {angle}°)",
     leftArmNotStraight: "Left arm not straight enough (current: {angle}°)",
     rightArmNotStraight: "Right arm not straight enough (current: {angle}°)",
     gunArmNotStraight: "Gun arm not straight enough (current: {angle}°)",
-    leftArmBodyAngleIncorrect: "Left arm-body angle incorrect (current: {angle}°)",
-    rightArmBodyAngleIncorrect: "Right arm-body angle incorrect (current: {angle}°)",
-    gunArmBodyAngleIncorrect: "Gun arm-body angle incorrect (current: {angle}°)",
-    supportArmBodyAngleIncorrect: "Support arm-body angle incorrect (current: {angle}°)",
-    supportArmWristAngleIncorrect: "Support arm wrist angle incorrect (current: {angle}°)",
+    leftArmBodyAngleIncorrect:
+      "Left arm-body angle incorrect (current: {angle}°)",
+    rightArmBodyAngleIncorrect:
+      "Right arm-body angle incorrect (current: {angle}°)",
+    gunArmBodyAngleIncorrect:
+      "Gun arm-body angle incorrect (current: {angle}°)",
+    supportArmBodyAngleIncorrect:
+      "Support arm-body angle incorrect (current: {angle}°)",
+    supportArmWristAngleIncorrect:
+      "Support arm wrist angle incorrect (current: {angle}°)",
     cannotDetermineSupportLeg: "Cannot determine support leg position",
-    supportLegNotProperlyPositioned: "Support leg not properly positioned (knee and toe on ground, butt on heel)",
-    otherLegKneeAngleIncorrect: "Other leg knee angle incorrect (current: {angle}°, should be 40-50°)",
+    supportLegNotProperlyPositioned:
+      "Support leg not properly positioned (knee and toe on ground, butt on heel)",
+    otherLegKneeAngleIncorrect:
+      "Other leg knee angle incorrect (current: {angle}°, should be 40-50°)",
     legsNotProperlySpread: "Legs not properly spread (should be 80-100° apart)",
-    supportArmWristNotOnKnee: "Support arm wrist not positioned on other leg's knee",
+    supportArmWristNotOnKnee:
+      "Support arm wrist not positioned on other leg's knee",
     cannotSeeFeetShoulders: "Cannot see feet/shoulders clearly",
     leftKneeNotBent: "Left knee not slightly bent",
     leftLegNotVisible: "Left leg not fully visible",
@@ -268,6 +281,8 @@ const i18n = {
     kneelingDesc: "Tư thế quỳ thấp",
     checkingGun: "Động tác khám súng",
     checkingGunDesc: "Tư thế kiểm tra an toàn",
+    gunAssembling: "Động tác tháo lắp súng",
+    gunAssemblingDesc: "Tháo lắp súng đảm bảo an toàn",
 
     // Pose Selector
     poseTypeSelection: "🎯 Chọn Loại Tư thế",
@@ -340,23 +355,33 @@ const i18n = {
     feetSpacingIncorrect: "Khoảng cách chân không đúng (nên rộng bằng vai)",
     feetNotParallel: "Chân nên song song (cạnh nhau), không phải trước-sau",
     frontBackStanceIncorrect: "Tư thế trước-sau: chân quá gần hoặc quá xa nhau",
-    frontBackKneeBendIncorrect: "Tư thế trước-sau: chân trước nên cong hơn, chân sau thẳng hơn",
-    legAngleIncorrect: "Góc chân không đúng cho loại tư thế (hiện tại: {angle}°)",
+    frontBackKneeBendIncorrect:
+      "Tư thế trước-sau: chân trước nên cong hơn, chân sau thẳng hơn",
+    legAngleIncorrect:
+      "Góc chân không đúng cho loại tư thế (hiện tại: {angle}°)",
     leftLegNotStraight: "Chân trái không đủ thẳng (hiện tại: {angle}°)",
     rightLegNotStraight: "Chân phải không đủ thẳng (hiện tại: {angle}°)",
     leftArmNotStraight: "Tay trái không đủ thẳng (hiện tại: {angle}°)",
     rightArmNotStraight: "Tay phải không đủ thẳng (hiện tại: {angle}°)",
     gunArmNotStraight: "Tay cầm súng không đủ thẳng (hiện tại: {angle}°)",
-    leftArmBodyAngleIncorrect: "Góc tay trái-thân người không đúng (hiện tại: {angle}°)",
-    rightArmBodyAngleIncorrect: "Góc tay phải-thân người không đúng (hiện tại: {angle}°)",
-    gunArmBodyAngleIncorrect: "Góc tay cầm súng-thân người không đúng (hiện tại: {angle}°)",
-    supportArmBodyAngleIncorrect: "Góc tay hỗ trợ-thân người không đúng (hiện tại: {angle}°)",
-    supportArmWristAngleIncorrect: "Góc cổ tay tay hỗ trợ không đúng (hiện tại: {angle}°)",
+    leftArmBodyAngleIncorrect:
+      "Góc tay trái-thân người không đúng (hiện tại: {angle}°)",
+    rightArmBodyAngleIncorrect:
+      "Góc tay phải-thân người không đúng (hiện tại: {angle}°)",
+    gunArmBodyAngleIncorrect:
+      "Góc tay cầm súng-thân người không đúng (hiện tại: {angle}°)",
+    supportArmBodyAngleIncorrect:
+      "Góc tay hỗ trợ-thân người không đúng (hiện tại: {angle}°)",
+    supportArmWristAngleIncorrect:
+      "Góc cổ tay tay hỗ trợ không đúng (hiện tại: {angle}°)",
     cannotDetermineSupportLeg: "Không thể xác định vị trí chân hỗ trợ",
-    supportLegNotProperlyPositioned: "Chân hỗ trợ không đúng vị trí (đầu gối và ngón chân trên mặt đất, mông trên gót chân)",
-    otherLegKneeAngleIncorrect: "Góc đầu gối chân kia không đúng (hiện tại: {angle}°)",
+    supportLegNotProperlyPositioned:
+      "Chân hỗ trợ không đúng vị trí (đầu gối và ngón chân trên mặt đất, mông trên gót chân)",
+    otherLegKneeAngleIncorrect:
+      "Góc đầu gối chân kia không đúng (hiện tại: {angle}°)",
     legsNotProperlySpread: "Chân không mở đúng cách (nên cách nhau 80-100°)",
-    supportArmWristNotOnKnee: "Cổ tay tay hỗ trợ không đặt trên đầu gối chân kia",
+    supportArmWristNotOnKnee:
+      "Cổ tay tay hỗ trợ không đặt trên đầu gối chân kia",
     cannotSeeFeetShoulders: "Không thể nhìn rõ chân/vai",
     leftKneeNotBent: "Đầu gối trái không hơi cong",
     leftLegNotVisible: "Chân trái không nhìn thấy rõ",
@@ -374,7 +399,8 @@ const i18n = {
     leftKneeBendIncorrect: "Độ cong đầu gối trái không đúng",
     rightKneeBendIncorrect: "Độ cong đầu gối phải không đúng",
     extendedArmNotStraight: "Tay duỗi không đủ thẳng (hiện tại: {angle}°)",
-    supportArmPositionIncorrect: "Vị trí tay hỗ trợ không đúng (hiện tại: {angle}°)",
+    supportArmPositionIncorrect:
+      "Vị trí tay hỗ trợ không đúng (hiện tại: {angle}°)",
     supportArmNotVisible: "Tay hỗ trợ không nhìn thấy rõ",
     leftKneeNotBentEnough: "Đầu gối trái không cong đủ cho tư thế quỳ",
     rightKneeNotBentEnough: "Đầu gối phải không cong đủ cho tư thế quỳ",
