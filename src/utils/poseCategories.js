@@ -754,73 +754,162 @@ export const POSE_RULES = {
       return { issues, score, total };
     },
   },
-  [POSE_CATEGORIES.GUN_ASSEMBLING]: {
-    name: t("gunAssembling"),
-    description: t("gunAssemblingDesc"),
-    rules: (keypoints) => {
-      const issues = [];
-      let score = 0;
-      let total = 0;
+   [POSE_CATEGORIES.GUN_ASSEMBLING]: {
+     name: t("gunAssembling"),
+     description: t("gunAssemblingDesc"),
+     rules: (keypoints) => {
+       const issues = [];
+       let score = 0;
+       let total = 0;
 
-      const RS = byName(keypoints, "right_shoulder");
-      const RE = byName(keypoints, "right_elbow");
-      const RW = byName(keypoints, "right_wrist");
-      const RH = byName(keypoints, "left_hip");
-      const LH = byName(keypoints, "right_hip");
-      const LK = byName(keypoints, "left_knee");
-      const RK = byName(keypoints, "right_knee");
-      const LA = byName(keypoints, "left_ankle");
-      const RA = byName(keypoints, "right_ankle");
+       // Get key landmarks (using 2D coordinates only)
+       const LS = byName(keypoints, "left_shoulder");    // 5
+       const RS = byName(keypoints, "right_shoulder");   // 6
+       const LE = byName(keypoints, "left_elbow");       // 7
+       const RE = byName(keypoints, "right_elbow");      // 8
+       const LW = byName(keypoints, "left_wrist");       // 9
+       const RW = byName(keypoints, "right_wrist");      // 10
+       const LH = byName(keypoints, "left_hip");         // 11
+       const RH = byName(keypoints, "right_hip");        // 12
+       const LK = byName(keypoints, "left_knee");        // 13
+       const RK = byName(keypoints, "right_knee");       // 14
+       const LA = byName(keypoints, "left_ankle");       // 15
+       const RA = byName(keypoints, "right_ankle");      // 16
 
-      // Arm angle with body
-      total++;
-      if (RS && RE && RH) {
-        const a = angle3D(RE, RS, RH);
-        const armBodyScore = scoreAngle(a, 20, 50, 3);
-        score += armBodyScore;
-        if (armBodyScore < 1.0)
-          issues.push(t("armAngleIncorrect", { angle: a.toFixed(1) }));
-      } else issues.push(t("frontArmNotVisible"));
+       // 1. Check if person is facing camera (shoulders visible)
+       total++;
+       if (LS && RS) {
+         const shoulderDistance = Math.abs(LS.x - RS.x);
+         if (shoulderDistance > 50) { // Shoulders should be visible
+           score += 1.0;
+         } else {
+           issues.push("Quay mặt về phía camera - vai không nhìn thấy");
+         }
+       } else {
+         issues.push("Không phát hiện được vai");
+       }
 
-      total++;
-      if (RS && RE && RW) {
-        const a = angle3D(RS, RE, RW);
-        const elbowScore = scoreAngle(a, 80, 110, 5);
-        score += elbowScore;
-        if (elbowScore < 1.0) issues.push(t("rightElbowNotBentEnough"));
-      } else issues.push(t("rearArmNotVisible"));
+       // 2. Check both legs are straight (knee angles 160-180°)
+       total++;
+       if (LH && LK && LA) {
+         const leftKneeAngle = angleAt(LK, LH, LA);
+         if (leftKneeAngle && leftKneeAngle >= 160 && leftKneeAngle <= 180) {
+           score += 1; // Half point for left leg
+         } else {
+           issues.push(`Chân trái không thẳng: ${leftKneeAngle?.toFixed(1) || 'N/A'}° (cần 160-180°)`);
+         }
+       } else {
+         issues.push("Chân trái không nhìn thấy đầy đủ");
+       }
 
-      total++;
-      if (LH && LK && LA) {
-        const leftKneeAng = angle3D(LH, LK, LA);
-        const leftLegScore = scoreAngle(leftKneeAng, 150, 180, 5);
-        score += leftLegScore;
-        if (leftLegScore < 1.0) {
-          issues.push(
-            t("leftLegNotStraight", {
-              angle: leftKneeAng?.toFixed(1) || "N/A",
-            })
-          );
+       total++;
+       if (RH && RK && RA) {
+         const rightKneeAngle = angleAt(RK, RH, RA);
+         if (rightKneeAngle && rightKneeAngle >= 160 && rightKneeAngle <= 180) {
+           score += 1; // Half point for right leg
+         } else {
+           issues.push(`Chân phải không thẳng: ${rightKneeAngle?.toFixed(1) || 'N/A'}° (cần 160-180°)`);
+         }
+       } else {
+         issues.push("Chân phải không nhìn thấy đầy đủ");
+       }
+
+       total++;
+        if (LA && RA && LS && RS) {
+          const ankleW = distance3D(LA, RA);
+          const shoulderW = distance3D(LS, RS);
+          if (ankleW > 0 && shoulderW > 0) {
+            const minSpacing = shoulderW * 0.8;
+            const maxSpacing = shoulderW * 1.2;
+            const spacingScore = calculateGraduatedScore(
+              ankleW,
+              minSpacing,
+              maxSpacing,
+              shoulderW * 0.05
+            );
+            score += spacingScore;
+
+            if (spacingScore < 1.0) {
+              issues.push(t("feetSpacingIncorrect"));
+            }
+          } else {
+            issues.push(t("feetSpacingIncorrect"));
+          }
         }
-      }
 
-      total++;
-      if (RH && RK && RA) {
-        const rightKneeAng = angle3D(RH, RK, RA);
-        const rightLegScore = scoreAngle(rightKneeAng, 150, 180, 5);
-        score += rightLegScore;
-        if (rightLegScore < 1.0) {
-          issues.push(
-            t("rightLegNotStraight", {
-              angle: rightKneeAng?.toFixed(1) || "N/A",
-            })
-          );
-        }
-      }
+       // 3. Check hand positioning - two valid poses
+       total++;
+       if (LW && RW && LH && RH && LS && RS) {
+         const handHeight = (LW.y + RW.y) / 2;
+         const hipHeight = (LH.y + RH.y) / 2;
+         const shoulderHeight = (LS.y + RS.y) / 2;
+         const heightDiffFromHip = handHeight - hipHeight;
+         const heightDiffFromShoulder = handHeight - shoulderHeight;
+         
+         // Check if both wrists are close together (within 100 pixels)
+         const wristDistance = Math.sqrt((LW.x - RW.x) ** 2 + (LW.y - RW.y) ** 2);
+         const wristsClose = wristDistance < 100;
+         
+         // Pose 1: Hands near hip level (gun assembly at waist)
+         const isHipLevel = heightDiffFromHip > -50 && heightDiffFromHip < 100;
+         
+         // Pose 2: Hands lifted in front of chest (gun assembly at chest level)
+         const isChestLevel = heightDiffFromShoulder > -100 && heightDiffFromShoulder < 50;
+         
+         if ((isHipLevel || isChestLevel) && wristsClose) {
+           score += 1.0;
+           if (isHipLevel) {
+             // Additional check for hip-level pose: arms should be more bent
+             if (RS && RE && RW) {
+               const rightArmAngle = angleAt(RE, RS, RW);
+               if (rightArmAngle && rightArmAngle >= 60 && rightArmAngle <= 120) {
+                 // Good arm positioning for hip-level assembly
+               } else {
+                 issues.push(`Để lắp ráp ở hông, gập tay nhiều hơn: ${rightArmAngle?.toFixed(1) || 'N/A'}° (cần 60-120°)`);
+               }
+             }
+           } else if (isChestLevel) {
+             // Additional check for chest-level pose: arms should be more extended
+             if (RS && RE && RW) {
+               const rightArmAngle = angleAt(RE, RS, RW);
+               if (rightArmAngle && rightArmAngle >= 120 && rightArmAngle <= 160) {
+                 // Good arm positioning for chest-level assembly
+               } else {
+                 issues.push(`Để lắp ráp ở ngực, duỗi tay nhiều hơn: ${rightArmAngle?.toFixed(1) || 'N/A'}° (cần 120-160°)`);
+               }
+             }
+           }
+         } else {
+           if (!wristsClose) {
+             issues.push("Hai cổ tay cần gần nhau hơn để lắp ráp súng");
+           }
+           if (!isHipLevel && !isChestLevel) {
+             issues.push("Tay nên ở mức hông (lắp ráp ở eo) hoặc nâng lên ngực");
+           }
+         }
+       } else {
+         issues.push("Không phát hiện được tay, hông hoặc vai");
+       }
 
-      return { issues, score, total };
-    },
-  },
+       // 4. Check body alignment (shoulders and hips aligned)
+       total++;
+       if (LS && RS && LH && RH) {
+         const shoulderCenter = (LS.x + RS.x) / 2;
+         const hipCenter = (LH.x + RH.x) / 2;
+         const alignment = Math.abs(shoulderCenter - hipCenter);
+         
+         if (alignment < 30) { // Good alignment
+           score += 1.0;
+         } else {
+           issues.push("Giữ vai thẳng hàng với hông");
+         }
+       } else {
+         issues.push("Không thể kiểm tra căn chỉnh cơ thể");
+       }
+
+       return { issues, score, total };
+     },
+   },
 };
 
 // Get pose category display info
