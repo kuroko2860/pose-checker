@@ -279,9 +279,9 @@ const i18n = {
     oneHandStandingDesc: "Tư thế một tay",
     kneeling: "Động tác quỳ",
     kneelingDesc: "Tư thế quỳ thấp",
-    checkingGun: "Động tác khám súng",
-    checkingGunDesc: "Tư thế kiểm tra an toàn",
-    gunAssembling: "Động tác tháo lắp súng",
+    checkingGun: "Động tác tháo lắp súng 1",
+    checkingGunDesc: "Kiểm tra an toàn súng",
+    gunAssembling: "Động tác tháo lắp súng 2",
     gunAssemblingDesc: "Tháo lắp súng đảm bảo an toàn",
 
     // Pose Selector
